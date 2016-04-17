@@ -4091,7 +4091,8 @@ class ConfigGeneral(Config):
                     calendar_unprotected=None, calendar_icons=None, debug=None, ssl_verify=None, no_restart=None, coming_eps_missed_range=None,
                     fuzzy_dating=None, trim_zero=None, date_preset=None, date_preset_na=None, time_preset=None,
                     indexer_timeout=None, download_url=None, rootDir=None, theme_name=None, default_page=None,
-                    git_reset=None, git_username=None, git_password=None, display_all_seasons=None, subliminal_log=None, privacy_level='normal'):
+                    git_reset=None, git_username=None, git_password=None, display_all_seasons=None, subliminal_log=None, privacy_level='normal',
+                    fanart_background=None, fanart_background_opacity=None,):
 
         results = []
 
