@@ -22,6 +22,7 @@
 
 <%block name="content">
 
+<div id="container">
 <div id="config">
 
     <div id="config-content">
@@ -254,5 +255,6 @@
         </form>
     </div>
 </div>
+</div> <!-- end of container -->
 
 </%block>

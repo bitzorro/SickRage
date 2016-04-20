@@ -9,7 +9,7 @@
 </%block>
 <%block name="content">
 <%namespace file="/inc_defs.mako" import="renderQualityPill"/>
-
+<div id="container">
 <form name="massUpdateForm" method="post" action="massUpdate">
 <table style="width: 100%;" class="home-header">
     <tr>
@@ -119,4 +119,5 @@
 </tbody>
 </table>
 </form>
+</div> <!-- end of container -->
 </%block>

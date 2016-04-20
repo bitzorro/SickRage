@@ -1546,7 +1546,8 @@ class Home(WebRoot):
 
         return {'result': searched_item[0]['searchstatus']}
 
-    def snatchSelection(self, show=None, season=None, episode=None, manual_search_type="episode", perform_search=0, down_cur_quality=0, show_all_results=0):
+    def snatchSelection(self, show=None, season=None, episode=None, manual_search_type="episode",
+                        perform_search=0, down_cur_quality=0, show_all_results=0):
         """ The view with results for the manual selected show/episode """
 
         INDEXER_TVDB = 1
@@ -3471,13 +3472,15 @@ class Manage(Home, WebRoot):
             action='backlogOverview', title='Backlog Overview',
             header='Backlog Overview', topmenu='manage')
 
-    def massEdit(self, toEdit=None):
+    def massEdit(self, **shows):
         t = PageTemplate(rh=self, filename="manage_massEdit.mako")
 
-        if not toEdit:
-            return self.redirect("/manage/")
+        # I need to do this, because somewhere Tornado wraps the json in another json object.
+        showIDs = json.loads(shows.iteritems().next()[0]).get('editListOfShows')
 
-        showIDs = toEdit.split("|")
+        if not showIDs:
+            return json.dumps({"redirect": "/manage/"})
+
         showList = []
         showNames = []
         for curID in showIDs:
@@ -3590,7 +3593,7 @@ class Manage(Home, WebRoot):
         air_by_date_value = last_air_by_date if air_by_date_all_same else None
         root_dir_list = root_dir_list
 
-        return t.render(showList=toEdit, showNames=showNames, default_ep_status_value=default_ep_status_value,
+        return t.render(showList='|'.join(showIDs), showNames=showNames, default_ep_status_value=default_ep_status_value,
                         paused_value=paused_value, anime_value=anime_value, flatten_folders_value=flatten_folders_value,
                         quality_value=quality_value, subtitles_value=subtitles_value, scene_value=scene_value, sports_value=sports_value,
                         air_by_date_value=air_by_date_value, root_dir_list=root_dir_list, title='Mass Edit', header='Mass Edit', topmenu='manage')

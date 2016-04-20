@@ -1,14 +1,21 @@
 $(document).ready(function(){
     $('.submitMassEdit').on('click', function(){
-        var editArr = [];
 
+        var data = {"editListOfShows" : []}
         $('.editCheck').each(function() {
-            if(this.checked === true) { editArr.push($(this).attr('id').split('-')[1]); }
+            if(this.checked === true) { data.editListOfShows.push($(this).attr('id').split('-')[1]); }
         });
 
-        if(editArr.length === 0) { return; }
+        if(data.editListOfShows.length === 0) { return; }
 
-        window.location.href = 'massEdit?toEdit='+editArr.join('|');
+        $.ajax({
+            type: "POST",
+            url: 'massEdit',
+            data: JSON.stringify(data),
+          })
+          .done(function(response) {
+              $('#container').html(response);
+          });
     });
 
     $('.submitMassUpdate').on('click', function(){
