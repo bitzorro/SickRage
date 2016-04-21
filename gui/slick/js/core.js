@@ -3400,20 +3400,33 @@ var SICKRAGE = {
             });
 
             $('#submitShowDirs').on('click', function() {
-                var dirArr = [];
+                var dirArr = {"submitListOfShows" : [], "promptForSettings": ''};
                 $('.dirCheck').each(function() {
                     if (this.checked === true) {
-                        var show = $(this).attr('id');
-                        var indexer = $(this).closest('tr').find('select').val();
-                        dirArr.push(encodeURIComponent(indexer + '|' + show));
+                        var existingIndexerId = $(this).attr('data-existing-indexer-id');
+                        var showName = $(this).attr('data-show-name');
+                        var existingIndexer = $(this).attr('data-existing-indexer');
+                        var selectedIndexer = $(this).closest('tr').find('select').val();
+                        var showDir = $(this).attr('data-show-dir');
+                        dirArr.submitListOfShows.push({"existingIndexerId": existingIndexerId, "showDir": showDir,
+                            "showName": showName, "existingIndexer": existingIndexer,"selectedIndexer": selectedIndexer});
                     }
                 });
-
+                
                 if (dirArr.length === 0) {
                     return false;
                 }
+                
+                dirArr.promptForSettings = $('#promptForSettings').prop('checked') ? 'on' : 'off';
 
-                window.location.href = srRoot + '/addShows/addExistingShows?promptForSettings=' + ($('#promptForSettings').prop('checked') ? 'on' : 'off') + '&shows_to_add=' + dirArr.join('&shows_to_add=');
+                $.ajax({
+                    type: "POST",
+                    url: srRoot + '/addShows/addExistingShows',
+                    data: JSON.stringify(dirArr),
+                  })
+                  .done(function(response) {
+                      $('#container').html(response);
+                  });
             });
 
             function loadContent() {

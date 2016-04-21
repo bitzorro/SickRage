@@ -1635,7 +1635,6 @@ class Home(WebRoot):
             'name': showObj.name,
         })
 
-
         episode_history = []
         try:
             main_db_con = db.DBConnection()
@@ -1648,7 +1647,7 @@ class Home(WebRoot):
                     episode_history.append(dict(item))
         except Exception as e:
             logger.log("Couldn't read latest episode statust. Error: {}".format(e))
-            
+
         show_words = show_name_helpers.show_words(showObj)
 
         return t.render(
@@ -2694,7 +2693,7 @@ class HomeAddShows(Home):
                             if not indexer_id and i:
                                 indexer_id = i
 
-                cur_dir['existing_info'] = (indexer_id, show_name, indexer)
+                cur_dir['existing_info'] = {"indexer_id": indexer_id, "show_name": show_name, "indexer": indexer}
 
                 if indexer_id and Show.find(sickbeard.showList, indexer_id):
                     cur_dir['added_already'] = True
@@ -3138,41 +3137,52 @@ class HomeAddShows(Home):
 
         return indexer, show_dir, indexer_id, show_name
 
-    def addExistingShows(self, shows_to_add=None, promptForSettings=None):
+    def addExistingShows(self, **data):
         """
         Receives a dir list and add them. Adds the ones with given TVDB IDs first, then forwards
         along to the newShow page.
         """
+
+        # We need to do this, because somewhere Tornado wraps the json in another json object.
+        json_param = json.loads(data.iteritems().next()[0])
+
+        # Get the passed attributes
+        shows_to_add = json_param.get('submitListOfShows')
+        prompt_for_settings = config.checkbox_to_value(json_param.get('promptForSettings'))
+
         # grab a list of other shows to add, if provided
         if not shows_to_add:
             shows_to_add = []
         elif not isinstance(shows_to_add, list):
             shows_to_add = [shows_to_add]
 
-        shows_to_add = [unquote_plus(x) for x in shows_to_add]
-
-        promptForSettings = config.checkbox_to_value(promptForSettings)
+        # shows_to_add = [unquote_plus(x) for x in shows_to_add]
 
         indexer_id_given = []
         dirs_only = []
         # separate all the ones with Indexer IDs
         for cur_dir in shows_to_add:
-            if '|' in cur_dir:
-                split_vals = cur_dir.split('|')
-                if len(split_vals) < 3:
-                    dirs_only.append(cur_dir)
-            if '|' not in cur_dir:
+            selected_indexer = cur_dir.get('selectedIndexer')
+            existing_indexer = cur_dir.get('existingIndexer')
+            existing_indexer_id = cur_dir.get('existingIndexerId')
+            show_name = cur_dir.get('showName')
+            show_dir = cur_dir.get('showDir')
+
+            if existing_indexer_id and existing_indexer:
+                indexer = existing_indexer
+            elif sickbeard.INDEXER_DEFAULT > 0:
+                indexer = sickbeard.INDEXER_DEFAULT
+
+            if not selected_indexer:
                 dirs_only.append(cur_dir)
             else:
-                indexer, show_dir, indexer_id, show_name = self.split_extra_show(cur_dir)
-
-                if not show_dir or not indexer_id or not show_name:
+                if not show_dir or not existing_indexer_id or not show_name:
                     continue
 
-                indexer_id_given.append((int(indexer), show_dir, int(indexer_id), show_name))
+                indexer_id_given.append((int(indexer), show_dir, int(existing_indexer_id), show_name))
 
         # if they want me to prompt for settings then I will just carry on to the newShow page
-        if promptForSettings and shows_to_add:
+        if prompt_for_settings and shows_to_add:
             return self.newShow(shows_to_add[0], shows_to_add[1:])
 
         # if they don't want me to prompt for settings then I can just add all the nfo shows now
@@ -3478,6 +3488,8 @@ class Manage(Home, WebRoot):
         # I need to do this, because somewhere Tornado wraps the json in another json object.
         showIDs = json.loads(shows.iteritems().next()[0]).get('editListOfShows')
 
+        # This doesn't do anything, at least not that I can think of. Because of no checkboxes selected
+        # massEdit is never called.
         if not showIDs:
             return json.dumps({"redirect": "/manage/"})
 

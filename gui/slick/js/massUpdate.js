@@ -1,7 +1,7 @@
 $(document).ready(function(){
     $('.submitMassEdit').on('click', function(){
 
-        var data = {"editListOfShows" : []}
+        var data = {"editListOfShows" : []};
         $('.editCheck').each(function() {
             if(this.checked === true) { data.editListOfShows.push($(this).attr('id').split('-')[1]); }
         });
@@ -10,7 +10,7 @@ $(document).ready(function(){
 
         $.ajax({
             type: "POST",
-            url: 'massEdit',
+            url: srRoot + '/massEdit',
             data: JSON.stringify(data),
           })
           .done(function(response) {
