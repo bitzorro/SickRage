@@ -3399,6 +3399,25 @@ var SICKRAGE = {
                 });
             });
 
+            // jquery extend function
+            $.extend(
+            {
+                redirectPost: function(location, args)
+                {
+                    var form = '';
+                    $.each( args, function( key, value ) {
+                        if (typeof(value) === "object") {
+                            $.each( value, function( key, subValue ) {
+                                form += '<input type="hidden" name="'+key+'" value="'+subValue+'">';
+                            });
+                        } else {
+                            form += '<input type="hidden" name="'+key+'" value="'+value+'">';
+                        }
+                    });
+                    $('<form action="'+location+'" method="POST">'+form+'</form>').appendTo('body').submit();
+                }
+            });
+
             $('#submitShowDirs').on('click', function() {
                 var dirArr = {"submitListOfShows" : [], "promptForSettings": ''};
                 $('.dirCheck').each(function() {
@@ -3424,8 +3443,10 @@ var SICKRAGE = {
                     url: srRoot + '/addShows/addExistingShows',
                     data: JSON.stringify(dirArr),
                   })
-                  .done(function(response) {
-                      $('#container').html(response);
+                  .success(function(response) {
+                      if (response) {
+                          $.redirectPost('/addShows/newShow', JSON.parse(response));
+                      }
                   });
             });
 

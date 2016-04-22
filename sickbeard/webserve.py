@@ -2557,6 +2557,7 @@ class HomePostProcess(Home):
 class HomeAddShows(Home):
     def __init__(self, *args, **kwargs):
         super(HomeAddShows, self).__init__(*args, **kwargs)
+        self.shows_to_add = None
 
     def index(self):
         t = PageTemplate(rh=self, filename="addShows.mako")
@@ -2693,20 +2694,47 @@ class HomeAddShows(Home):
                             if not indexer_id and i:
                                 indexer_id = i
 
-                cur_dir['existing_info'] = {"indexer_id": indexer_id, "show_name": show_name, "indexer": indexer}
+                cur_dir['existing_info'] = {"indexer_id": indexer_id or '', "show_name": show_name or '',
+                                            "indexer": indexer or ''}
 
                 if indexer_id and Show.find(sickbeard.showList, indexer_id):
                     cur_dir['added_already'] = True
         return t.render(dirList=dir_list)
 
-    def newShow(self, show_to_add=None, other_shows=None, search_string=None):
+    def newShow(self, show_to_add=None, other_shows=None, search_string=None, **shows_to_add):
         """
         Display the new show page which collects a tvdb id, folder, and extra options and
         posts them to addNewShow
         """
         t = PageTemplate(rh=self, filename="addShows_newShow.mako")
 
-        indexer, show_dir, indexer_id, show_name = self.split_extra_show(show_to_add)
+        if shows_to_add:
+            if isinstance(shows_to_add.items()[0][1], list):
+                shows_from_json = [{} for x in range(len(shows_to_add.items()[0][1]))]
+                for attribute in shows_to_add:
+                    for i, x in enumerate(shows_to_add[attribute]):
+                        try:
+                            shows_from_json[i][attribute] = x
+                        except:
+                            pass
+
+                # Get the first show from the list, and process this one
+                show_to_add = shows_from_json.pop(0)
+                other_shows = shows_from_json
+            else:
+                # This should be the last show to be added
+                show_to_add = shows_to_add
+        elif show_to_add:
+            # Sanitize unquote and eval to dict
+            show_to_add = ast.literal_eval(unquote_plus(show_to_add).strip())
+            other_shows = [ast.literal_eval(unquote_plus(x).strip()) for x in other_shows]
+        else:
+            return
+
+        indexer = show_to_add.get('selectedIndexer')
+        indexer_id = show_to_add.get('existingIndexerId')
+        show_name = show_to_add.get('showName')
+        show_dir = show_to_add.get('showDir')
 
         if indexer_id and indexer and show_name:
             use_provided_info = True
@@ -3173,7 +3201,7 @@ class HomeAddShows(Home):
             elif sickbeard.INDEXER_DEFAULT > 0:
                 indexer = sickbeard.INDEXER_DEFAULT
 
-            if not selected_indexer:
+            if not existing_indexer:
                 dirs_only.append(cur_dir)
             else:
                 if not show_dir or not existing_indexer_id or not show_name:
@@ -3212,9 +3240,12 @@ class HomeAddShows(Home):
         if not dirs_only:
             return self.redirect('/home/')
 
+        # Keep track of the dirs, for shows that we want to add
+        self.shows_to_add = dirs_only
         # for the remaining shows we need to prompt for each one, so forward this on to the newShow page
-        return self.newShow(dirs_only[0], dirs_only[1:])
-
+        ## We're going to return a json with info, that will be used to redirect
+        # return self.newShow(dirs_only[0], dirs_only[1:])
+        return json.dumps(dirs_only)
 
 @route('/manage(/?.*)')
 class Manage(Home, WebRoot):
