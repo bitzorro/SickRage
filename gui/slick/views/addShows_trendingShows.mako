@@ -3,8 +3,10 @@
     import sickbeard
 %>
 <%block name="scripts">
-<script type="text/javascript" src="${srRoot}/js/rootDirs.js?${sbPID}"></script>
-<script type="text/javascript" src="${srRoot}/js/plotTooltip.js?${sbPID}"></script>
+    <script type="text/javascript" src="${srRoot}/js/qualityChooser.js?${sbPID}"></script>
+% if enable_anime_options:
+    <script type="text/javascript" src="${srRoot}/js/blackwhite.js?${sbPID}"></script>
+% endif
 </%block>
 <%block name="content">
 % if not header is UNDEFINED:
@@ -14,7 +16,7 @@
 % endif
 
 <div id="tabs">
-    <fieldset class="component-group-list">
+        <fieldset class="component-group-list">
         <div class="field-pair">
             <label class="clearfix" for="content_configure_show_options">
                 <span class="component-title">Configure Show Options</span>
@@ -26,6 +28,7 @@
         </div>
         <div id="content_configure_show_options">
             <div class="field-pair">
+
                 <label class="clearfix" for="configure_show_options">
                 <ul>
                     <li><a href="#tabs-1">Manage Directories</a></li>
@@ -39,6 +42,7 @@
                     <%include file="/inc_addShowOptions.mako"/>
                 </div>
                 </label>
+
             </div>
         </div>  <!-- /content_configure_show_options //-->
     </fieldset>
