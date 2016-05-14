@@ -212,6 +212,9 @@ class ShowQueue(generic_queue.GenericQueue):
         queue_item_obj = QueueItemRemove(show=show, full=full)
         self.add_item(queue_item_obj)
 
+        # Show removal has been queued, let's updaste the sickbeard.RECENTLY_DELETED global, to keep track of it
+        sickbeard.RECENTLY_DELETED.update([show.indexerid])
+
         return queue_item_obj
 
 
