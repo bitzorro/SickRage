@@ -1,15 +1,16 @@
 from __future__ import absolute_import
 import os
 import xml.etree.cElementTree as etree
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 import tempfile
 import getpass
 from appdirs import user_cache_dir
-import requests
 from simpleanidb.helper import download_file
 from simpleanidb.models import Anime
 from simpleanidb.exceptions import GeneralError
-import xml.etree.ElementTree as ET
+
+import requests
 
 __version__ = "0.1.0"
 __author__ = "Dennis Lutter"
