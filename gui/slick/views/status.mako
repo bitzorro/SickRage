@@ -48,9 +48,9 @@
            <tr>
                <td>${schedulerName}</td>
                % if service.isAlive():
-               <td style="background-color:green">${service.isAlive()}</td>
+               <td style="background-color:green;">${service.isAlive()}</td>
                % else:
-               <td style="background-color:red">${service.isAlive()}</td>
+               <td style="background-color:red;">${service.isAlive()}</td>
                % endif
                % if scheduler == 'backlogSearchScheduler':
                    <% searchQueue = getattr(sickbeard, 'searchQueueScheduler') %>
