@@ -399,11 +399,11 @@ table.cal-even {
 }
 
 .calendarShow .text .airtime {
-    color:#fff
+    color:#fff;
 }
 
 .calendarShow .text .episode-title {
-    color:#aaa
+    color:#aaa;
 }
 
 /* =======================================================================
@@ -1007,7 +1007,7 @@ new #confirmBox
 }
 
 .modal-header .close {
-    display: none
+    display: none;
 }
 
 .modal-footer button {
