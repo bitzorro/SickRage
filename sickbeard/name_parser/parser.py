@@ -22,6 +22,8 @@ import os
 import time
 import re
 import os.path
+
+import guessit
 import sickbeard
 from sickbeard.name_parser import regexes
 
@@ -31,6 +33,11 @@ from sickrage.helper.encoding import ek
 from sickrage.helper.exceptions import ex
 from sickbeard.helpers import remove_non_release_groups
 import dateutil
+from guessit.api import default_api
+from sickbeard.name_parser.custom.processors import processors
+
+
+default_api.rebulk.rebulk(processors())
 
 
 class NameParser(object):
@@ -100,13 +107,57 @@ class NameParser(object):
                 else:
                     self.compiled_regexes.append((cur_pattern_num, cur_pattern_name, cur_regex))
 
-    def _parse_string(self, name):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+    expected_titles = {
+        '11.22.63',
+        'Star Trek DS9'
+    }
+    expected_groups = {
+        'novarip',
+        'pourmoi',
+        'RiPRG',
+        'RipPourBox',
+        'F4ST',
+        're:\bAR$',
+        're:\bZT$',
+        're:\bTL$',
+        're:\bMC$',
+        're:\bJIVE$',
+    }
+
+    def _guessit_parse(self, name):
+        result = ParseResult(name)
+        guess = guessit.guessit(name, options=dict(implicit=True, type='episode', expected_title=self.expected_titles,
+                                                   expected_group=self.expected_groups))
+
+        result.series_name = guess.get('film_title') or guess.get('title')
+        if guess.get('year'):
+            # TODO: what's the logic to include year? Move to guessit post processor?
+            try:
+                result.series_name = '{name} {year}'.format(name=result.series_name, year=guess.get('year'))
+            except:
+                pass
+        result.season_number = guess.get('season')
+
+        result.episode_numbers = guess.get('episode') if guess.get('episode') else []
+        if not isinstance(result.episode_numbers, list):
+            result.episode_numbers = [result.episode_numbers]
+
+        result.release_group = guess.get('release_group')
+        result.air_date = guess.get('date')
+        result.extra_info = 'Proper' if guess.get('proper_count', 0) > 0 else None
+        result.version = -1
+        return result
+
+    def _parse_string(self, name, use_guessit=False):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         if not name:
             return
 
+        if use_guessit:
+            return self._guessit_parse(name)
+
         matches = []
         bestResult = None
-        
+
         # Remove non release groups from filename
         name = remove_non_release_groups(name)
 
@@ -402,7 +453,7 @@ class NameParser(object):
 
         return number
 
-    def parse(self, name, cache_result=True):
+    def parse(self, name, cache_result=True, use_guessit=False):
         name = self._unicodify(name)
 
         if self.naming_pattern:
@@ -424,7 +475,7 @@ class NameParser(object):
         final_result = ParseResult(name)
 
         # try parsing the file name
-        file_name_result = self._parse_string(base_file_name)
+        file_name_result = self._parse_string(base_file_name, use_guessit=use_guessit)
 
         # use only the direct parent dir
         dir_name = ek(os.path.basename, dir_name)
@@ -567,6 +618,10 @@ class ParseResult(object):  # pylint: disable=too-many-instance-attributes
         if self.ab_episode_numbers:
             return True
         return False
+
+    @property
+    def is_proper(self):
+        return re.search(r'(^|[\. _-])(proper|repack)([\. _-]|$)', self.extra_info, re.I) is not None if self.extra_info else False
 
 
 class NameParserCache(object):
