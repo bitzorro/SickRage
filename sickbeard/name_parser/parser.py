@@ -169,6 +169,13 @@ class NameParser(object):
         result.air_date = guess.get('date')
         result.extra_info = 'Proper' if guess.get('proper_count', 0) > 0 else None
         result.version = -1
+
+        if result.series_name:
+            # try and create a show object for this result
+            result.show = helpers.get_show(result.series_name, self.tryIndexers)
+            if result.show:
+                result.quality = common.Quality.nameQuality(name, result.show.is_anime)
+
         return result
 
     def _parse_string(self, name, use_guessit=True):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
