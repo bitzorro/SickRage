@@ -476,7 +476,7 @@ class NameParser(object):
 
         return number
 
-    def parse(self, name, cache_result=True, use_guessit=False):
+    def parse(self, name, cache_result=True, use_guessit=True):
         name = self._unicodify(name)
 
         if self.naming_pattern:
