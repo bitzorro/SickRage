@@ -3,17 +3,96 @@
 """
 Processors
 """
+import copy
 import re
 from rebulk.processors import POST_PROCESS
 from rebulk.rebulk import Rebulk
 from rebulk.rules import CustomRule
 
 
-class ReleaseGroupPostProcessor(CustomRule):
+class ExpectedTitlePostProcessor(CustomRule):
     """
-    Empty rule for ordering post_processing properly.
+    Expected title post processor to replace dots with spaces (needed when expected title is a regex)
     """
     priority = POST_PROCESS
+
+    def when(self, matches, context):
+        return matches.tagged('expected')
+
+    def then(self, matches, when_response, context):  # pragma: no cover
+        if when_response:
+            title = matches.tagged('expected', 0)
+            if title.value not in context.get('expected_title'):
+                # TODO: improve this
+                title.value = title.value.replace('.', ' ')
+
+
+class ExtendedTitlePostProcessor(CustomRule):
+    """
+    ExtendedTitle post processor to add country or year to the existing title
+    """
+    priority = POST_PROCESS
+
+    def when(self, matches, context):
+        return (matches.named('country') or matches.named('year')) and \
+               (matches.named('title') or matches.named('film_title')) and \
+               (matches.tagged('SxxExx'))
+
+    def then(self, matches, when_response, context):  # pragma: no cover
+        if when_response:
+            extended_title = matches.named('film_title', 0) or matches.named('title', 0)
+            episode = matches.tagged('SxxExx', 0)
+            for key in ['country', 'year']:
+                key_match = matches.named(key, 0)
+                if not key_match or extended_title.end != key_match.start:
+                    continue
+                delta = episode.start - key_match.end
+                if 0 <= delta <= 3:
+                    extended_title = copy.copy(extended_title)
+                    extended_title.name = 'extended_title'
+                    extended_title.value = extended_title.value + ' ' + re.sub(r'\W*', '', str(key_match.raw))
+                    extended_title.end = key_match.end
+                    extended_title.raw_end = key_match.raw_end
+                    matches.append(extended_title)
+                    break
+
+
+class ReleaseGroupPostProcessor(CustomRule):
+    """
+    Release Group post processor
+    """
+    priority = POST_PROCESS
+    regexes = [
+        # [word], (word), {word}
+        re.compile(r'\W*[\[\(\{].+[\}\)\]]\W*$', flags=re.IGNORECASE),
+
+        # 200MB, 1GB
+        re.compile(r'(\W*\d+[mg]b\b\W*)', flags=re.IGNORECASE),
+
+        # vol255+101
+        re.compile(r'\.vol\d+\+\d+', flags=re.IGNORECASE),
+
+        # ReEnc, Re-Enc
+        re.compile(r'\W*\bre\-?enc\b\W*', flags=re.IGNORECASE),
+
+        # word.rar, word.gz
+        re.compile(r'\.((rar)|(gz)|(\d+))$', flags=re.IGNORECASE),
+
+        # WORD.rartv, WORD.ettv
+        re.compile(r'(?<=[A-Z0-9]{3})\.([a-z]+)$', flags=re.IGNORECASE),
+
+        # NLSubs-word
+        re.compile(r'\W*\b([A-Z]{2})(subs)\b\W*', flags=re.IGNORECASE),
+
+        # INTERNAL
+        re.compile(r'\W*\b((INTERNAL)|(Obfuscated)|(VTV)|(SD)|(AVC))\b\W*', flags=re.IGNORECASE),
+
+        # ...word
+        re.compile(r'^\W+', flags=re.IGNORECASE),
+
+        # word[.
+        re.compile(r'\W+$', flags=re.IGNORECASE),
+    ]
 
     def when(self, matches, context):
         return matches.named('release_group')
@@ -22,49 +101,14 @@ class ReleaseGroupPostProcessor(CustomRule):
         if when_response:
             match = matches.named('release_group', 0)
             # TODO: use rebulk? make it nicer
-            match.value = self.remove_contents_in_groups(match.value)
-            match.value = self.remove_media_size(match.value)
-            match.value = self.remove_volume_info(match.value)
-            match.value = self.remove_reenc(match.value)
-            match.value = self.remove_extensions(match.value)
-            match.value = self.remove_wrong_suffixes(match.value)
-            match.value = self.remove_known_words_word(match.value)
-            match.value = self.strip_non_word_at_start_and_end(match.value)
+            for regex in self.regexes:
+                match.value = regex.sub('', match.value)
+                if not match.value:
+                    break
+
             if not match.value:
                 matches.remove(match)
 
-    def remove_contents_in_groups(self, value):
-        # [word], (word), {word}
-        return re.sub(r'\W*[\[\(\{].+[\}\)\]]\W*$', '', value)
-
-    def remove_media_size(self, value):
-        # 200MB, 1GB
-        return re.sub(r'(\W*\d+[mg]b\b\W*)', '', value, flags=re.IGNORECASE)
-
-    def remove_volume_info(self, value):
-        # vol255+101
-        return re.sub(r'\.vol\d+\+\d+', '', value, flags=re.IGNORECASE)
-
-    def remove_reenc(self, value):
-        # ReEnc, Re-Enc
-        return re.sub(r'\W*\bre\-?enc\b\W*', '', value, flags=re.IGNORECASE)
-
-    def remove_extensions(self, value):
-        # word.rar, word.gz
-        return re.sub(r'\.(rar)|(gz)$', '', value, flags=re.IGNORECASE)
-
-    def remove_wrong_suffixes(self, value):
-        # WORD.rartv, WORD.ettv
-        return re.sub(r'(?<=[A-Z0-9]{3})\.([a-z]+)$', '', value)
-
-    def remove_known_words_word(self, value):
-        # INTERNAL
-        return re.sub(r'\W*\b(INTERNAL)|(Obfuscated)\b\W*', '', value, flags=re.IGNORECASE)
-
-    def strip_non_word_at_start_and_end(self, value):
-        # ..word..  ]word.
-        value = re.sub(r'^\W+', '', value, flags=re.IGNORECASE)
-        return re.sub(r'\W+$', '', value, flags=re.IGNORECASE)
 
 def processors():
     """
@@ -72,4 +116,4 @@ def processors():
     :return: Created Rebulk object
     :rtype: Rebulk
     """
-    return Rebulk().rules(ReleaseGroupPostProcessor)
+    return Rebulk().rules(ExpectedTitlePostProcessor, ExtendedTitlePostProcessor, ReleaseGroupPostProcessor)
