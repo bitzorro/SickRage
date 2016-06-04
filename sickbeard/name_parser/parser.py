@@ -162,10 +162,14 @@ class NameParser(object):
         result.series_name = guess.get('extended_title') or guess.get('film_title') or guess.get('title')
         result.season_number = guess.get('season')
 
-        result.episode_numbers = guess.get('episode') if guess.get('episode') else []
-        if not isinstance(result.episode_numbers, list):
-            result.episode_numbers = [result.episode_numbers]
-        # TODO: Handle ab_episode_numbers
+        episodes = [guess.get('episode')] if isinstance(guess.get('episode'), int) else guess.get('episode')
+        parts = [guess.get('part')] if isinstance(guess.get('part'), int) else guess.get('part')
+
+        if result.season_number is not None:
+            result.episode_numbers = episodes
+        else:
+            result.ab_episode_numbers = episodes or parts
+        # TODO: Enhance ab_episode_numbers
 
         result.release_group = guess.get('release_group')
         result.air_date = guess.get('date')
