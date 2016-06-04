@@ -108,20 +108,49 @@ class NameParser(object):
                     self.compiled_regexes.append((cur_pattern_num, cur_pattern_name, cur_regex))
 
     expected_titles = {
+        # guessit doesn't add dots for this show
         '11.22.63',
-        'Star Trek DS9'
+
+        # guessit gets confused because of the numbers
+        r're:^60 Minutes\b',
+        r're:^Star Trek DS9\b',
+        r're:^The 100\b',
+
+        # guessit identifies as website
+        r're:^Dark Net\b',
+
+        # TODO: needs investigation...
+        r're:^Storm Chasers\b',
     }
+
+    # release group exception list
     expected_groups = {
-        'novarip',
-        'pourmoi',
-        'RiPRG',
-        'RipPourBox',
-        'F4ST',
-        're:\bAR$',
-        're:\bZT$',
-        're:\bTL$',
-        're:\bMC$',
-        're:\bJIVE$',
+        # guessit blacklists parts of the name for the following groups
+        r're:\bbyEMP\b',
+        r're:\bELITETORRENT\b',
+        r're:\bF4ST3R\b',
+        r're:\bF4ST\b',
+        r're:\bGOLF68\b',
+        r're:\bNF69\b',
+        r're:\bNovaRip\b',
+        r're:\bPARTiCLE\b',
+        r're:\bPOURMOi\b',
+        r're:\bRipPourBox\b',
+        r're:\bRiPRG\b',
+        r're:\bTV2LAX9\b',
+
+        # guessit uses these endings as safe sub-domains
+        r're:\bAF$',
+        r're:\bAR$',
+        r're:\bCS$',
+        r're:\bDR$',
+        r're:\bJIVE$',
+        r're:\bMC$',
+        r're:\bNA$',
+        r're:\bNL$',
+        r're:\bTL$',
+        r're:\bYT$',
+        r're:\bZT$',
     }
 
     def _guessit_parse(self, name):
@@ -129,13 +158,7 @@ class NameParser(object):
         guess = guessit.guessit(name, options=dict(implicit=True, type='episode', expected_title=self.expected_titles,
                                                    expected_group=self.expected_groups))
 
-        result.series_name = guess.get('film_title') or guess.get('title')
-        if guess.get('year'):
-            # TODO: what's the logic to include year? Move to guessit post processor?
-            try:
-                result.series_name = '{name} {year}'.format(name=result.series_name, year=guess.get('year'))
-            except:
-                pass
+        result.series_name = guess.get('extended_title') or guess.get('film_title') or guess.get('title')
         result.season_number = guess.get('season')
 
         result.episode_numbers = guess.get('episode') if guess.get('episode') else []
@@ -148,7 +171,7 @@ class NameParser(object):
         result.version = -1
         return result
 
-    def _parse_string(self, name, use_guessit=False):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+    def _parse_string(self, name, use_guessit=True):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         if not name:
             return
 
