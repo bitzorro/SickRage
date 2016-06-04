@@ -21,7 +21,7 @@ class ExpectedTitlePostProcessor(CustomRule):
 
     def then(self, matches, when_response, context):  # pragma: no cover
         if when_response:
-            title = matches.tagged('expected', 0)
+            title = matches.tagged('expected', index=0)
             if title.value not in context.get('expected_title'):
                 # TODO: improve this
                 title.value = title.value.replace('.', ' ')
@@ -36,25 +36,22 @@ class ExtendedTitlePostProcessor(CustomRule):
     def when(self, matches, context):
         return (matches.named('country') or matches.named('year')) and \
                (matches.named('title') or matches.named('film_title')) and \
-               (matches.tagged('SxxExx'))
+               (matches.named('season') or matches.named('episode') or matches.named('date'))
 
     def then(self, matches, when_response, context):  # pragma: no cover
         if when_response:
-            extended_title = matches.named('film_title', 0) or matches.named('title', 0)
-            episode = matches.tagged('SxxExx', 0)
-            for key in ['country', 'year']:
-                key_match = matches.named(key, 0)
-                if not key_match or extended_title.end != key_match.start:
-                    continue
-                delta = episode.start - key_match.end
-                if 0 <= delta <= 3:
+            extended_title = matches.named('film_title', index=0) or matches.named('title', index=0)
+            after_title = matches.next(extended_title, index=0)
+            if after_title and after_title.name in ('country', 'year'):
+                next_match = matches.next(after_title, index=0)
+                # Only add country or year if the next match is season, episode or date
+                if next_match and next_match.name in ('season', 'episode', 'date'):
                     extended_title = copy.copy(extended_title)
                     extended_title.name = 'extended_title'
-                    extended_title.value = extended_title.value + ' ' + re.sub(r'\W*', '', str(key_match.raw))
-                    extended_title.end = key_match.end
-                    extended_title.raw_end = key_match.raw_end
+                    extended_title.value = extended_title.value + ' ' + re.sub(r'\W*', '', str(after_title.raw))
+                    extended_title.end = after_title.end
+                    extended_title.raw_end = after_title.raw_end
                     matches.append(extended_title)
-                    break
 
 
 class ReleaseGroupPostProcessor(CustomRule):
@@ -67,7 +64,7 @@ class ReleaseGroupPostProcessor(CustomRule):
         re.compile(r'\W*[\[\(\{].+[\}\)\]]\W*$', flags=re.IGNORECASE),
 
         # 200MB, 1GB
-        re.compile(r'(\W*\d+[mg]b\b\W*)', flags=re.IGNORECASE),
+        re.compile(r'(\W*\b\d+[mg]b\b\W*)', flags=re.IGNORECASE),
 
         # vol255+101
         re.compile(r'\.vol\d+\+\d+', flags=re.IGNORECASE),
@@ -99,8 +96,7 @@ class ReleaseGroupPostProcessor(CustomRule):
 
     def then(self, matches, when_response, context):  # pragma: no cover
         if when_response:
-            match = matches.named('release_group', 0)
-            # TODO: use rebulk? make it nicer
+            match = matches.named('release_group', index=0)
             for regex in self.regexes:
                 match.value = regex.sub('', match.value)
                 if not match.value:

@@ -111,7 +111,8 @@ class NameParser(object):
         # guessit doesn't add dots for this show
         '11.22.63',
 
-        # guessit gets confused because of the numbers
+        # guessit gets confused because of the numbers (only in some special cases)
+        r're:^12 Monkeys\b',
         r're:^60 Minutes\b',
         r're:^Star Trek DS9\b',
         r're:^The 100\b',
@@ -131,6 +132,7 @@ class NameParser(object):
         r're:\bF4ST3R\b',
         r're:\bF4ST\b',
         r're:\bGOLF68\b',
+        r're:\bJIVE\b',
         r're:\bNF69\b',
         r're:\bNovaRip\b',
         r're:\bPARTiCLE\b',
@@ -144,7 +146,6 @@ class NameParser(object):
         r're:\bAR$',
         r're:\bCS$',
         r're:\bDR$',
-        r're:\bJIVE$',
         r're:\bMC$',
         r're:\bNA$',
         r're:\bNL$',
@@ -164,6 +165,7 @@ class NameParser(object):
         result.episode_numbers = guess.get('episode') if guess.get('episode') else []
         if not isinstance(result.episode_numbers, list):
             result.episode_numbers = [result.episode_numbers]
+        # TODO: Handle ab_episode_numbers
 
         result.release_group = guess.get('release_group')
         result.air_date = guess.get('date')
