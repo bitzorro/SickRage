@@ -157,6 +157,8 @@ class NameParser(object):
         r're:\bZT$',
     }
 
+    pre_cleanup_re = re.compile(r'\.vol\d+\+\d+.*', flags=re.IGNORECASE)
+
     def _guessit_parse(self, name):
         result = ParseResult(name)
         guess = guessit.guessit(name, options=dict(implicit=True, type='episode', expected_title=self.expected_titles,
@@ -495,6 +497,7 @@ class NameParser(object):
 
     def parse(self, name, cache_result=True, use_guessit=True):
         name = self._unicodify(name)
+        name = self.pre_cleanup_re.sub('', name)
 
         if self.naming_pattern:
             cache_result = False

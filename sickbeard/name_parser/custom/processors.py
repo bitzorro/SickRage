@@ -75,6 +75,105 @@ class AnimeAbsoluteEpisodeNumbers(CustomRule):
                 matches.remove(season)
 
 
+class FixSeasonEpisodeDetection(CustomRule):
+    """
+    Work-around for https://github.com/guessit-io/guessit/issues/295
+    """
+    priority = POST_PROCESS
+
+    def when(self, matches, context):
+        return matches.named('season') and matches.named('video_codec') and not matches.named('episode')
+
+    def then(self, matches, when_response, context):  # pragma: no cover
+        if when_response:
+            seasons = matches.named('season')
+            next_match = matches.next(seasons[-1], index=0)
+            # guessit gest confused when the next match is x264 or x265
+            if len(seasons) == 2 and next_match.name == 'video_codec' and next_match.value in ('h264', 'h265'):
+                episode = seasons[1]
+                episode.name = 'episode'
+
+
+class FixWrongSeasonAndReleaseGroup(CustomRule):
+    """
+    Work-around for https://github.com/guessit-io/guessit/issues/303
+    """
+    priority = POST_PROCESS
+    problematic_words = {
+        'bs666', 'ccs3', 'qqss44',
+    }
+
+    def when(self, matches, context):
+        return matches.named('season') and matches.named('release_group')
+
+    def then(self, matches, when_response, context):  # pragma: no cover
+        if when_response:
+            seasons = matches.named('season')
+            if len(seasons) == 2:
+                last_season = seasons[-1]
+                previous_match = matches.previous(last_season, index=-1)
+                if previous_match.name == 'release_group':
+                    holes = matches.holes(start=previous_match.end, end=last_season.start)
+                    if len(holes) == 1:
+                        hole = holes[0]
+                        correct_release_group = previous_match.value + hole.raw + last_season.raw
+                        if correct_release_group.lower() in self.problematic_words:
+                            previous_match.value = correct_release_group
+                            matches.remove(last_season)
+
+
+class FixSeasonRangeDetection(CustomRule):
+    """
+    Work-around for https://github.com/guessit-io/guessit/issues/287
+    """
+    priority = POST_PROCESS
+
+    def when(self, matches, context):
+        return matches.named('season')
+
+    def then(self, matches, when_response, context):  # pragma: no cover
+        if when_response:
+            seasons = matches.named('season')
+            if len(seasons) == 2:
+                start_season = seasons[0]
+                end_season = seasons[-1]
+                if 1 < end_season.value - start_season.value < 30:
+                    holes = matches.holes(start=start_season.end, end=end_season.start)
+                    if len(holes) == 1:
+                        hole = holes[0]
+                        if hole.value.lower() in ('-', '-s'):
+                            for i in range(start_season.value + 1, end_season.value):
+                                new_season = copy.copy(start_season)
+                                new_season.value = i
+                                matches.append(new_season)
+
+
+class FixEpisodeRangeDetection(CustomRule):
+    """
+    Work-around for https://github.com/guessit-io/guessit/issues/287
+    """
+    priority = POST_PROCESS
+
+    def when(self, matches, context):
+        return matches.named('episode')
+
+    def then(self, matches, when_response, context):  # pragma: no cover
+        if when_response:
+            episodes = matches.named('episode')
+            if len(episodes) == 2:
+                start_episode = episodes[0]
+                end_episode = episodes[-1]
+                if 1 < end_episode.value - start_episode.value < 30:
+                    holes = matches.holes(start=start_episode.end, end=end_episode.start)
+                    if len(holes) == 1:
+                        hole = holes[0]
+                        if hole.value.lower() in ('-', '-e'):
+                            for i in range(start_episode.value + 1, end_episode.value):
+                                new_season = copy.copy(start_episode)
+                                new_season.value = i
+                                matches.append(new_season)
+
+
 class ReleaseGroupPostProcessor(CustomRule):
     """
     Release Group post processor
@@ -137,4 +236,6 @@ def processors():
     :return: Created Rebulk object
     :rtype: Rebulk
     """
-    return Rebulk().rules(ExpectedTitlePostProcessor, ExtendedTitlePostProcessor, AnimeAbsoluteEpisodeNumbers, ReleaseGroupPostProcessor)
+    return Rebulk().rules(FixWrongSeasonAndReleaseGroup, FixSeasonEpisodeDetection, FixSeasonRangeDetection,
+                          FixEpisodeRangeDetection, AnimeAbsoluteEpisodeNumbers, ExpectedTitlePostProcessor,
+                          ExtendedTitlePostProcessor, ReleaseGroupPostProcessor)
