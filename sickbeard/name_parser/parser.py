@@ -117,6 +117,7 @@ class NameParser(object):
         r're:^Star Trek DS9\b',
         r're:^The 100\b',
 
+        # https://github.com/guessit-io/guessit/issues/298
         # guessit identifies as website
         r're:^Dark Net\b',
 
@@ -126,6 +127,7 @@ class NameParser(object):
 
     # release group exception list
     expected_groups = {
+        # https://github.com/guessit-io/guessit/issues/297
         # guessit blacklists parts of the name for the following groups
         r're:\bbyEMP\b',
         r're:\bELITETORRENT\b',
@@ -141,6 +143,7 @@ class NameParser(object):
         r're:\bRiPRG\b',
         r're:\bTV2LAX9\b',
 
+        # https://github.com/guessit-io/guessit/issues/296
         # guessit uses these endings as safe sub-domains
         r're:\bAF$',
         r're:\bAR$',
@@ -159,17 +162,18 @@ class NameParser(object):
         guess = guessit.guessit(name, options=dict(implicit=True, type='episode', expected_title=self.expected_titles,
                                                    expected_group=self.expected_groups))
 
+        # film_title might contain the correct title due to this bug: https://github.com/guessit-io/guessit/issues/294
         result.series_name = guess.get('extended_title') or guess.get('film_title') or guess.get('title')
         result.season_number = guess.get('season')
 
         episodes = [guess.get('episode')] if isinstance(guess.get('episode'), int) else guess.get('episode')
         parts = [guess.get('part')] if isinstance(guess.get('part'), int) else guess.get('part')
 
-        if result.season_number is not None:
+        if guess.get('season') is not None:
             result.episode_numbers = episodes
         else:
             result.ab_episode_numbers = episodes or parts
-        # TODO: Enhance ab_episode_numbers
+        # TODO: Handle ab_episode_numbers
 
         result.release_group = guess.get('release_group')
         result.air_date = guess.get('date')
