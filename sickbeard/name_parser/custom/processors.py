@@ -33,6 +33,7 @@ class ExtendedTitlePostProcessor(CustomRule):
     """
     priority = POST_PROCESS
 
+    # film_title might contain the correct title due to this bug: https://github.com/guessit-io/guessit/issues/294
     def when(self, matches, context):
         return (matches.named('country') or matches.named('year')) and \
                (matches.named('title') or matches.named('film_title')) and \
@@ -54,6 +55,26 @@ class ExtendedTitlePostProcessor(CustomRule):
                     matches.append(extended_title)
 
 
+class AnimeAbsoluteEpisodeNumbers(CustomRule):
+    """
+    If it's an anime, use absolute episode numbers
+    """
+    priority = POST_PROCESS
+
+    def when(self, matches, context):
+        return matches.tagged('anime') and matches.tagged('weak-duplicate') and matches.named('episode') and \
+               matches.named('season')
+
+    def then(self, matches, when_response, context):  # pragma: no cover
+        if when_response:
+            season = matches.named('season', index=0)
+            episode = matches.named('episode', index=0)
+            if season.end == episode.start and season.raw.isdigit() and episode.raw.isdigit():
+                episode.start = season.start
+                episode.value = int(episode.raw)
+                matches.remove(season)
+
+
 class ReleaseGroupPostProcessor(CustomRule):
     """
     Release Group post processor
@@ -63,12 +84,15 @@ class ReleaseGroupPostProcessor(CustomRule):
         # [word], (word), {word}
         re.compile(r'\W*[\[\(\{].+[\}\)\]]\W*$', flags=re.IGNORECASE),
 
+        # https://github.com/guessit-io/guessit/issues/299
         # 200MB, 1GB
         re.compile(r'(\W*\b\d+[mg]b\b\W*)', flags=re.IGNORECASE),
 
+        # https://github.com/guessit-io/guessit/issues/301
         # vol255+101
         re.compile(r'\.vol\d+\+\d+', flags=re.IGNORECASE),
 
+        # https://github.com/guessit-io/guessit/issues/300
         # ReEnc, Re-Enc
         re.compile(r'\W*\bre\-?enc\b\W*', flags=re.IGNORECASE),
 
@@ -81,6 +105,7 @@ class ReleaseGroupPostProcessor(CustomRule):
         # NLSubs-word
         re.compile(r'\W*\b([A-Z]{2})(subs)\b\W*', flags=re.IGNORECASE),
 
+        # https://github.com/guessit-io/guessit/issues/302
         # INTERNAL
         re.compile(r'\W*\b((INTERNAL)|(Obfuscated)|(VTV)|(SD)|(AVC))\b\W*', flags=re.IGNORECASE),
 
@@ -112,4 +137,4 @@ def processors():
     :return: Created Rebulk object
     :rtype: Rebulk
     """
-    return Rebulk().rules(ExpectedTitlePostProcessor, ExtendedTitlePostProcessor, ReleaseGroupPostProcessor)
+    return Rebulk().rules(ExpectedTitlePostProcessor, ExtendedTitlePostProcessor, AnimeAbsoluteEpisodeNumbers, ReleaseGroupPostProcessor)
