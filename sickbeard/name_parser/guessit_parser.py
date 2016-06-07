@@ -62,6 +62,14 @@ class GuessitNameParser(object):
     }
 
     def guess(self, name):
+        """
+        Given a release name, it guesses the episode information
+
+        :param name: the release name
+        :type name: str
+        :return: the guessed properties
+        :rtype: dict
+        """
         options = dict(type='episode', implicit=True, expected_title=self.expected_titles,
                        expected_group=self.expected_groups)
         guess = guessit.guessit(name, options=options)
@@ -73,15 +81,16 @@ class GuessitNameParser(object):
             'release_group': guess.get('release_group'),
             'air_date': guess.get('date'),
             'version': guess.get('version'),
-            'extra_info': ' '.join(self._list(guess.get('other'), default=[])),
-            'episode_numbers': self._list(guess.get('episode')),
-            'ab_episode_numbers': self._list(guess.get('absolute_episode'))
+            'extra_info': ' '.join(_list(guess.get('other'), default=[])),
+            'episode_numbers': _list(guess.get('episode')),
+            'ab_episode_numbers': _list(guess.get('absolute_episode'))
         }
 
         return result
 
-    def _list(self, value, default=None):
-        return sorted(value) if isinstance(value, list) else [value] if value else default
+
+def _list(value, default=None):
+    return sorted(value) if isinstance(value, list) else [value] if value is not None else default
 
 
 default_api.rebulk.rebulk(rules())
