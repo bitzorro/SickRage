@@ -23,22 +23,19 @@ import time
 import re
 import os.path
 
-import guessit
 import sickbeard
 from sickbeard.name_parser import regexes
 
 from sickbeard import logger, helpers, scene_numbering, common, scene_exceptions, db
+from sickbeard.name_parser.guessit_parser import parser as guessit_parser
 from sickrage.helper.common import remove_extension
 from sickrage.helper.encoding import ek
 from sickrage.helper.exceptions import ex
 from sickbeard.helpers import remove_non_release_groups
 import dateutil
-from guessit.api import default_api
-from sickbeard.name_parser.custom.processors import processors
 
-
-default_api.rebulk.rebulk(processors())
-
+pre_cleanup_re = re.compile(r'(\.vol\d+\+\d+)?((\.par2\b)|(\.nzb\b)|(\.mkv\b)).*((\d+\.of\.\d+)|(\(\d+/\d+\))).*$',
+                            flags=re.IGNORECASE)
 
 class NameParser(object):
     ALL_REGEX = 0
@@ -46,13 +43,13 @@ class NameParser(object):
     ANIME_REGEX = 2
 
     def __init__(self, file_name=True, showObj=None, tryIndexers=False,  # pylint: disable=too-many-arguments
-                 naming_pattern=False, parse_method=None):
+                 naming_pattern=False, parse_method=None, use_guessit=True):
 
         self.file_name = file_name
         self.showObj = showObj
         self.tryIndexers = tryIndexers
-
         self.naming_pattern = naming_pattern
+        self.use_guessit = use_guessit
 
         if (self.showObj and not self.showObj.is_anime) or parse_method == 'normal':
             self._compile_regexes(self.NORMAL_REGEX)
@@ -107,182 +104,105 @@ class NameParser(object):
                 else:
                     self.compiled_regexes.append((cur_pattern_num, cur_pattern_name, cur_regex))
 
-    expected_titles = {
-        # guessit doesn't add dots for this show
-        '11.22.63',
-
-        # guessit gets confused because of the numbers (only in some special cases)
-        r're:^12 Monkeys\b',
-        r're:^60 Minutes\b',
-        r're:^Star Trek DS9\b',
-        r're:^The 100\b',
-
-        # https://github.com/guessit-io/guessit/issues/298
-        # guessit identifies as website
-        r're:^Dark Net\b',
-
-        # TODO: needs investigation...
-        r're:^Storm Chasers\b',
-    }
-
-    # release group exception list
-    expected_groups = {
-        # https://github.com/guessit-io/guessit/issues/297
-        # guessit blacklists parts of the name for the following groups
-        r're:\bbyEMP\b',
-        r're:\bELITETORRENT\b',
-        r're:\bF4ST3R\b',
-        r're:\bF4ST\b',
-        r're:\bGOLF68\b',
-        r're:\bJIVE\b',
-        r're:\bNF69\b',
-        r're:\bNovaRip\b',
-        r're:\bPARTiCLE\b',
-        r're:\bPOURMOi\b',
-        r're:\bRipPourBox\b',
-        r're:\bRiPRG\b',
-        r're:\bTV2LAX9\b',
-
-        # https://github.com/guessit-io/guessit/issues/296
-        # guessit uses these endings as safe sub-domains
-        r're:\bAF$',
-        r're:\bAR$',
-        r're:\bCS$',
-        r're:\bDR$',
-        r're:\bMC$',
-        r're:\bNA$',
-        r're:\bNL$',
-        r're:\bTL$',
-        r're:\bYT$',
-        r're:\bZT$',
-    }
-
-    pre_cleanup_re = re.compile(r'\.vol\d+\+\d+.*', flags=re.IGNORECASE)
-
-    def _guessit_parse(self, name):
-        result = ParseResult(name)
-        guess = guessit.guessit(name, options=dict(implicit=True, type='episode', expected_title=self.expected_titles,
-                                                   expected_group=self.expected_groups))
-
-        # film_title might contain the correct title due to this bug: https://github.com/guessit-io/guessit/issues/294
-        result.series_name = guess.get('extended_title') or guess.get('film_title') or guess.get('title')
-        result.season_number = guess.get('season')
-
-        episodes = [guess.get('episode')] if isinstance(guess.get('episode'), int) else guess.get('episode')
-        parts = [guess.get('part')] if isinstance(guess.get('part'), int) else guess.get('part')
-
-        if guess.get('season') is not None:
-            result.episode_numbers = episodes
-        else:
-            result.ab_episode_numbers = episodes or parts
-        # TODO: Handle ab_episode_numbers
-
-        result.release_group = guess.get('release_group')
-        result.air_date = guess.get('date')
-        result.extra_info = 'Proper' if guess.get('proper_count', 0) > 0 else None
-        result.version = -1
-
-        if result.series_name:
-            # try and create a show object for this result
-            result.show = helpers.get_show(result.series_name, self.tryIndexers)
-            if result.show:
-                result.quality = common.Quality.nameQuality(name, result.show.is_anime)
-
-        return result
-
-    def _parse_string(self, name, use_guessit=True):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+    def _parse_string(self, name):  # pylint: disable=too-many-locals, too-many-branches, too-many-statements
         if not name:
             return
-
-        if use_guessit:
-            return self._guessit_parse(name)
 
         matches = []
         bestResult = None
 
-        # Remove non release groups from filename
-        name = remove_non_release_groups(name)
-
-        for (cur_regex_num, cur_regex_name, cur_regex) in self.compiled_regexes:
-            match = cur_regex.match(name)
-
-            if not match:
-                continue
-
-            result = ParseResult(name)
-            result.which_regex = [cur_regex_name]
-            result.score = 0 - cur_regex_num
-
-            named_groups = match.groupdict().keys()
-
-            if 'series_name' in named_groups:
-                result.series_name = match.group('series_name')
-                if result.series_name:
-                    result.series_name = self.clean_series_name(result.series_name)
-                    result.score += 1
-
-            if 'series_num' in named_groups and match.group('series_num'):
-                result.score += 1
-
-            if 'season_num' in named_groups:
-                tmp_season = int(match.group('season_num'))
-                if cur_regex_name == 'bare' and tmp_season in (19, 20):
-                    continue
-                result.season_number = tmp_season
-                result.score += 1
-
-            if 'ep_num' in named_groups:
-                ep_num = self._convert_number(match.group('ep_num'))
-                if 'extra_ep_num' in named_groups and match.group('extra_ep_num'):
-                    result.episode_numbers = range(ep_num, self._convert_number(match.group('extra_ep_num')) + 1)
-                    result.score += 1
-                else:
-                    result.episode_numbers = [ep_num]
-                result.score += 1
-
-            if 'ep_ab_num' in named_groups:
-                ep_ab_num = self._convert_number(match.group('ep_ab_num'))
-                if 'extra_ab_ep_num' in named_groups and match.group('extra_ab_ep_num'):
-                    result.ab_episode_numbers = range(ep_ab_num,
-                                                      self._convert_number(match.group('extra_ab_ep_num')) + 1)
-                    result.score += 1
-                else:
-                    result.ab_episode_numbers = [ep_ab_num]
-                result.score += 1
-
-            if 'air_date' in named_groups:
-                air_date = match.group('air_date')
-                try:
-                    result.air_date = dateutil.parser.parse(air_date, fuzzy_with_tokens=True)[0].date()
-                    result.score += 1
-                except Exception:
-                    continue
-
-            if 'extra_info' in named_groups:
-                tmp_extra_info = match.group('extra_info')
-
-                # Show.S04.Special or Show.S05.Part.2.Extras is almost certainly not every episode in the season
-                if tmp_extra_info and cur_regex_name == 'season_only' and re.search(
-                        r'([. _-]|^)(special|extra)s?\w*([. _-]|$)', tmp_extra_info, re.I):
-                    continue
-                result.extra_info = tmp_extra_info
-                result.score += 1
-
-            if 'release_group' in named_groups:
-                result.release_group = match.group('release_group')
-                result.score += 1
-
-            if 'version' in named_groups:
-                # assigns version to anime file if detected using anime regex. Non-anime regex receives -1
-                version = match.group('version')
-                if version:
-                    result.version = version
-                else:
-                    result.version = 1
-            else:
-                result.version = -1
+        if self.use_guessit:
+            guess = guessit_parser.guess(name)
+            result = ParseResult(guess['original_name'])
+            for key, value in guess.iteritems():
+                setattr(result, key, value)
 
             matches.append(result)
+
+        # Remove non release groups from filename
+        else:
+            name = remove_non_release_groups(name)
+
+            for (cur_regex_num, cur_regex_name, cur_regex) in self.compiled_regexes:
+                match = cur_regex.match(name)
+
+                if not match:
+                    continue
+
+                result = ParseResult(name)
+                result.which_regex = [cur_regex_name]
+                result.score = 0 - cur_regex_num
+
+                named_groups = match.groupdict().keys()
+
+                if 'series_name' in named_groups:
+                    result.series_name = match.group('series_name')
+                    if result.series_name:
+                        result.series_name = self.clean_series_name(result.series_name)
+                        result.score += 1
+
+                if 'series_num' in named_groups and match.group('series_num'):
+                    result.score += 1
+
+                if 'season_num' in named_groups:
+                    tmp_season = int(match.group('season_num'))
+                    if cur_regex_name == 'bare' and tmp_season in (19, 20):
+                        continue
+                    result.season_number = tmp_season
+                    result.score += 1
+
+                if 'ep_num' in named_groups:
+                    ep_num = self._convert_number(match.group('ep_num'))
+                    if 'extra_ep_num' in named_groups and match.group('extra_ep_num'):
+                        result.episode_numbers = range(ep_num, self._convert_number(match.group('extra_ep_num')) + 1)
+                        result.score += 1
+                    else:
+                        result.episode_numbers = [ep_num]
+                    result.score += 1
+
+                if 'ep_ab_num' in named_groups:
+                    ep_ab_num = self._convert_number(match.group('ep_ab_num'))
+                    if 'extra_ab_ep_num' in named_groups and match.group('extra_ab_ep_num'):
+                        result.ab_episode_numbers = range(ep_ab_num,
+                                                          self._convert_number(match.group('extra_ab_ep_num')) + 1)
+                        result.score += 1
+                    else:
+                        result.ab_episode_numbers = [ep_ab_num]
+                    result.score += 1
+
+                if 'air_date' in named_groups:
+                    air_date = match.group('air_date')
+                    try:
+                        result.air_date = dateutil.parser.parse(air_date, fuzzy_with_tokens=True)[0].date()
+                        result.score += 1
+                    except Exception:
+                        continue
+
+                if 'extra_info' in named_groups:
+                    tmp_extra_info = match.group('extra_info')
+
+                    # Show.S04.Special or Show.S05.Part.2.Extras is almost certainly not every episode in the season
+                    if tmp_extra_info and cur_regex_name == 'season_only' and re.search(
+                            r'([. _-]|^)(special|extra)s?\w*([. _-]|$)', tmp_extra_info, re.I):
+                        continue
+                    result.extra_info = tmp_extra_info
+                    result.score += 1
+
+                if 'release_group' in named_groups:
+                    result.release_group = match.group('release_group')
+                    result.score += 1
+
+                if 'version' in named_groups:
+                    # assigns version to anime file if detected using anime regex. Non-anime regex receives -1
+                    version = match.group('version')
+                    if version:
+                        result.version = version
+                    else:
+                        result.version = 1
+                else:
+                    result.version = -1
+
+                matches.append(result)
 
         if matches:
             # pick best match with highest score based on placement
@@ -495,9 +415,9 @@ class NameParser(object):
 
         return number
 
-    def parse(self, name, cache_result=True, use_guessit=True):
+    def parse(self, name, cache_result=True):
         name = self._unicodify(name)
-        name = self.pre_cleanup_re.sub('', name)
+        name = pre_cleanup_re.sub('', name)
 
         if self.naming_pattern:
             cache_result = False
@@ -518,7 +438,7 @@ class NameParser(object):
         final_result = ParseResult(name)
 
         # try parsing the file name
-        file_name_result = self._parse_string(base_file_name, use_guessit=use_guessit)
+        file_name_result = self._parse_string(base_file_name)
 
         # use only the direct parent dir
         dir_name = ek(os.path.basename, dir_name)
