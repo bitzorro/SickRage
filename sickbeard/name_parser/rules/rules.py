@@ -7,7 +7,7 @@ import copy
 import re
 from rebulk.processors import POST_PROCESS
 from rebulk.rebulk import Rebulk
-from rebulk.rules import CustomRule, Rule, AppendMatch, RemoveMatch, RenameMatch
+from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
 
 
 class ExpectedTitlePostProcessor(Rule):
@@ -147,9 +147,27 @@ class FixSeasonEpisodeDetection(Rule):
                 return episode  # to be renamed to episode
 
 
+class FixSeasonNotDetected(Rule):
+    """
+    Work-around for https://github.com/guessit-io/guessit/issues/306
+    # Show.Name.-.Season.3.-.720p.BluRay.-.x264.-.Group
+    """
+    priority = POST_PROCESS
+    consequence = [RemoveMatch, RenameMatch('season')]
+
+    def when(self, matches, context):
+        episode = matches.named('episode', index=0)
+        if episode:
+            season = matches.previous(episode, index=-1)
+            if season and season.name == 'alternative_title' and season.value.lower() == 'season':
+                return season, episode
+
+
 class FixWrongSeasonAndReleaseGroup(Rule):
     """
     Work-around for https://github.com/guessit-io/guessit/issues/303
+
+    # Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666.rartv
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
@@ -158,27 +176,27 @@ class FixWrongSeasonAndReleaseGroup(Rule):
     }
 
     def when(self, matches, context):
-        if matches.named('release_group'):
-            seasons = matches.named('season')
-            if len(seasons) == 2:
-                last_season = seasons[-1]
-                release_group = matches.previous(last_season, index=-1)
-                if release_group.name == 'release_group':
-                    holes = matches.holes(start=release_group.end, end=last_season.start)
-                    if len(holes) == 1:
-                        to_remove = []
-                        to_append = []
-
-                        correct_release_group = release_group.value + holes[0].raw + last_season.raw
-                        if correct_release_group.lower() in self.problematic_words:
-                            new_release_group = copy.copy(release_group)
+        seasons = matches.named('season')
+        if seasons and len(seasons) == 2:
+            last_season = seasons[-1]
+            previous = matches.previous(last_season, index=-1)
+            if previous:
+                holes = matches.holes(start=previous.end, end=last_season.start)
+                if len(holes) == 1:
+                    to_remove = []
+                    to_append = []
+                    prefix = previous.value if previous.name == 'release_group' else ''
+                    correct_release_group = prefix + holes[0].raw + last_season.raw
+                    for word in self.problematic_words:
+                        if word in correct_release_group.lower():
+                            new_release_group = copy.copy(previous)
                             new_release_group.value = correct_release_group
 
                             to_remove.append(last_season)
-                            to_remove.append(release_group)
+                            to_remove.append(previous)
                             to_append.append(new_release_group)
 
-                        return to_remove, to_append
+                    return to_remove, to_append
 
 
 class FixSeasonRangeDetection(Rule):
@@ -187,6 +205,7 @@ class FixSeasonRangeDetection(Rule):
     """
     priority = POST_PROCESS
     consequence = AppendMatch
+    range_separator = ('-', '-s', '.to.s')
 
     def when(self, matches, context):
         seasons = matches.named('season')
@@ -194,17 +213,15 @@ class FixSeasonRangeDetection(Rule):
             start_season = seasons[0]
             end_season = seasons[-1]
             if 1 < end_season.value - start_season.value < 30:
-                holes = matches.holes(start=start_season.end, end=end_season.start)
-                if len(holes) == 1:
-                    hole = holes[0]
-                    if hole.value.lower() in ('-', '-s'):
-                        to_append = []
-                        for i in range(start_season.value + 1, end_season.value):
-                            new_season = copy.copy(start_season)
-                            new_season.value = i
-                            to_append.append(new_season)
+                season_separator = matches.input_string[start_season.end:end_season.start]
+                if season_separator.lower() in self.range_separator:
+                    to_append = []
+                    for i in range(start_season.value + 1, end_season.value):
+                        new_season = copy.copy(start_season)
+                        new_season.value = i
+                        to_append.append(new_season)
 
-                        return to_append
+                    return to_append
 
 
 class FixEpisodeRangeDetection(Rule):
@@ -303,7 +320,7 @@ def rules():
     :return: Created Rebulk object
     :rtype: Rebulk
     """
-    return Rebulk().rules(FixWrongSeasonAndReleaseGroup, FixSeasonEpisodeDetection, FixSeasonRangeDetection,
-                          FixEpisodeRangeDetection, AnimeAbsoluteEpisodeNumbers, AbsoluteEpisodeNumbers,
-                          PartsAsEpisodeNumbers, ExpectedTitlePostProcessor, CreateExtendedTitle,
-                          ReleaseGroupPostProcessor)
+    return Rebulk().rules(FixSeasonNotDetected, FixWrongSeasonAndReleaseGroup, FixSeasonEpisodeDetection,
+                          FixSeasonRangeDetection, FixEpisodeRangeDetection, AnimeAbsoluteEpisodeNumbers,
+                          AbsoluteEpisodeNumbers, PartsAsEpisodeNumbers, ExpectedTitlePostProcessor,
+                          CreateExtendedTitle, ReleaseGroupPostProcessor)
