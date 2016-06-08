@@ -109,7 +109,7 @@ searchQueueScheduler = None
 forcedSearchQueueScheduler = None
 manualSnatchScheduler = None
 properFinderScheduler = None
-autoPostProcesserScheduler = None
+autoPostProcessorScheduler = None
 subtitlesFinderScheduler = None
 traktCheckerScheduler = None
 
@@ -246,6 +246,8 @@ USE_TORRENTS = False
 NZB_METHOD = None
 NZB_DIR = None
 USENET_RETENTION = None
+CACHE_TRIMMING = None
+MAX_CACHE_AGE = None
 TORRENT_METHOD = None
 TORRENT_DIR = None
 DOWNLOAD_PROPERS = False
@@ -254,19 +256,19 @@ ALLOW_HIGH_PRIORITY = False
 SAB_FORCED = False
 RANDOMIZE_PROVIDERS = False
 
-AUTOPOSTPROCESSER_FREQUENCY = None
+AUTOPOSTPROCESSOR_FREQUENCY = None
 DAILYSEARCH_FREQUENCY = None
 UPDATE_FREQUENCY = None
 BACKLOG_FREQUENCY = None
 SHOWUPDATE_HOUR = None
 
-DEFAULT_AUTOPOSTPROCESSER_FREQUENCY = 10
+DEFAULT_AUTOPOSTPROCESSOR_FREQUENCY = 10
 DEFAULT_DAILYSEARCH_FREQUENCY = 40
 DEFAULT_BACKLOG_FREQUENCY = 21
 DEFAULT_UPDATE_FREQUENCY = 1
 DEFAULT_SHOWUPDATE_HOUR = random.randint(2, 4)
 
-MIN_AUTOPOSTPROCESSER_FREQUENCY = 1
+MIN_AUTOPOSTPROCESSOR_FREQUENCY = 1
 MIN_DAILYSEARCH_FREQUENCY = 10
 MIN_BACKLOG_FREQUENCY = 10
 MIN_UPDATE_FREQUENCY = 1
@@ -625,7 +627,7 @@ def initialize(consoleLogging=True):  # pylint: disable=too-many-locals, too-man
             PLEX_SERVER_HOST, PLEX_SERVER_TOKEN, PLEX_CLIENT_HOST, PLEX_SERVER_USERNAME, PLEX_SERVER_PASSWORD, PLEX_SERVER_HTTPS, MIN_BACKLOG_FREQUENCY, SKIP_REMOVED_FILES, ALLOWED_EXTENSIONS, \
             USE_EMBY, EMBY_HOST, EMBY_APIKEY, \
             showUpdateScheduler, __INITIALIZED__, INDEXER_DEFAULT_LANGUAGE, EP_DEFAULT_DELETED_STATUS, LAUNCH_BROWSER, TRASH_REMOVE_SHOW, TRASH_ROTATE_LOGS, SORT_ARTICLE, \
-            NEWZNAB_DATA, NZBS, NZBS_UID, NZBS_HASH, INDEXER_DEFAULT, INDEXER_TIMEOUT, USENET_RETENTION, TORRENT_DIR, \
+            NEWZNAB_DATA, NZBS, NZBS_UID, NZBS_HASH, INDEXER_DEFAULT, INDEXER_TIMEOUT, USENET_RETENTION, CACHE_TRIMMING, MAX_CACHE_AGE, TORRENT_DIR, \
             QUALITY_DEFAULT, FLATTEN_FOLDERS_DEFAULT, SUBTITLES_DEFAULT, STATUS_DEFAULT, STATUS_DEFAULT_AFTER, \
             GROWL_NOTIFY_ONSNATCH, GROWL_NOTIFY_ONDOWNLOAD, GROWL_NOTIFY_ONSUBTITLEDOWNLOAD, TWITTER_NOTIFY_ONSNATCH, TWITTER_NOTIFY_ONDOWNLOAD, TWITTER_NOTIFY_ONSUBTITLEDOWNLOAD, USE_FREEMOBILE, FREEMOBILE_ID, FREEMOBILE_APIKEY, FREEMOBILE_NOTIFY_ONSNATCH, FREEMOBILE_NOTIFY_ONDOWNLOAD, FREEMOBILE_NOTIFY_ONSUBTITLEDOWNLOAD, \
             USE_TELEGRAM, TELEGRAM_ID, TELEGRAM_APIKEY, TELEGRAM_NOTIFY_ONSNATCH, TELEGRAM_NOTIFY_ONDOWNLOAD, TELEGRAM_NOTIFY_ONSUBTITLEDOWNLOAD, \
@@ -638,7 +640,7 @@ def initialize(consoleLogging=True):  # pylint: disable=too-many-locals, too-man
             KEEP_PROCESSED_DIR, PROCESS_METHOD, DELRARCONTENTS, TV_DOWNLOAD_DIR, UPDATE_FREQUENCY, \
             showQueueScheduler, searchQueueScheduler, forcedSearchQueueScheduler, manualSnatchScheduler, ROOT_DIRS, CACHE_DIR, ACTUAL_CACHE_DIR, TIMEZONE_DISPLAY, \
             NAMING_PATTERN, NAMING_MULTI_EP, NAMING_ANIME_MULTI_EP, NAMING_FORCE_FOLDERS, NAMING_ABD_PATTERN, NAMING_CUSTOM_ABD, NAMING_SPORTS_PATTERN, NAMING_CUSTOM_SPORTS, NAMING_ANIME_PATTERN, NAMING_CUSTOM_ANIME, NAMING_STRIP_YEAR, \
-            RENAME_EPISODES, AIRDATE_EPISODES, FILE_TIMESTAMP_TIMEZONE, properFinderScheduler, PROVIDER_ORDER, autoPostProcesserScheduler, \
+            RENAME_EPISODES, AIRDATE_EPISODES, FILE_TIMESTAMP_TIMEZONE, properFinderScheduler, PROVIDER_ORDER, autoPostProcessorScheduler, \
             providerList, newznabProviderList, torrentRssProviderList, \
             EXTRA_SCRIPTS, USE_TWITTER, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_PREFIX, DAILYSEARCH_FREQUENCY, TWITTER_DMTO, TWITTER_USEDM, \
             USE_BOXCAR2, BOXCAR2_ACCESSTOKEN, BOXCAR2_NOTIFY_ONDOWNLOAD, BOXCAR2_NOTIFY_ONSUBTITLEDOWNLOAD, BOXCAR2_NOTIFY_ONSNATCH, \
@@ -654,7 +656,7 @@ def initialize(consoleLogging=True):  # pylint: disable=too-many-locals, too-man
             USE_SUBTITLES, SUBTITLES_LANGUAGES, SUBTITLES_DIR, SUBTITLES_SERVICES_LIST, SUBTITLES_SERVICES_ENABLED, SUBTITLES_HISTORY, SUBTITLES_FINDER_FREQUENCY, SUBTITLES_MULTI, SUBTITLES_DOWNLOAD_IN_PP, SUBTITLES_KEEP_ONLY_WANTED, EMBEDDED_SUBTITLES_ALL, SUBTITLES_EXTRA_SCRIPTS, SUBTITLES_PRE_SCRIPTS, SUBTITLES_PERFECT_MATCH, subtitlesFinderScheduler, \
             SUBTITLES_HEARING_IMPAIRED, ADDIC7ED_USER, ADDIC7ED_PASS, ITASA_USER, ITASA_PASS, LEGENDASTV_USER, LEGENDASTV_PASS, OPENSUBTITLES_USER, OPENSUBTITLES_PASS, \
             USE_FAILED_DOWNLOADS, DELETE_FAILED, ANON_REDIRECT, LOCALHOST_IP, DEBUG, DBDEBUG, DEFAULT_PAGE, SEEDERS_LEECHERS_IN_NOTIFY, PROXY_SETTING, PROXY_INDEXERS, \
-            AUTOPOSTPROCESSER_FREQUENCY, SHOWUPDATE_HOUR, \
+            AUTOPOSTPROCESSOR_FREQUENCY, SHOWUPDATE_HOUR, \
             ANIME_DEFAULT, NAMING_ANIME, ANIMESUPPORT, USE_ANIDB, ANIDB_USERNAME, ANIDB_PASSWORD, ANIDB_USE_MYLIST, \
             ANIME_SPLIT_HOME, SCENE_DEFAULT, DOWNLOAD_URL, BACKLOG_DAYS, GIT_USERNAME, GIT_PASSWORD, \
             DEVELOPER, gh, DISPLAY_ALL_SEASONS, SSL_VERIFY, NEWS_LAST_READ, NEWS_LATEST, SOCKET_TIMEOUT, RECENTLY_DELETED
@@ -930,10 +932,14 @@ def initialize(consoleLogging=True):  # pylint: disable=too-many-locals, too-man
 
         USENET_RETENTION = check_setting_int(CFG, 'General', 'usenet_retention', 500)
 
-        AUTOPOSTPROCESSER_FREQUENCY = check_setting_int(CFG, 'General', 'autopostprocesser_frequency',
-                                                        DEFAULT_AUTOPOSTPROCESSER_FREQUENCY)
-        if AUTOPOSTPROCESSER_FREQUENCY < MIN_AUTOPOSTPROCESSER_FREQUENCY:
-            AUTOPOSTPROCESSER_FREQUENCY = MIN_AUTOPOSTPROCESSER_FREQUENCY
+        CACHE_TRIMMING = bool(check_setting_int(CFG, 'General', 'cache_trimming', 0))
+
+        MAX_CACHE_AGE = check_setting_int(CFG, 'General', 'max_cache_age', 30)
+
+        AUTOPOSTPROCESSOR_FREQUENCY = check_setting_int(CFG, 'General', 'autopostprocessor_frequency',
+                                                        DEFAULT_AUTOPOSTPROCESSOR_FREQUENCY)
+        if AUTOPOSTPROCESSOR_FREQUENCY < MIN_AUTOPOSTPROCESSOR_FREQUENCY:
+            AUTOPOSTPROCESSOR_FREQUENCY = MIN_AUTOPOSTPROCESSOR_FREQUENCY
 
         DAILYSEARCH_FREQUENCY = check_setting_int(CFG, 'General', 'dailysearch_frequency',
                                                   DEFAULT_DAILYSEARCH_FREQUENCY)
@@ -1519,10 +1525,10 @@ def initialize(consoleLogging=True):  # pylint: disable=too-many-locals, too-man
                                                     run_delay=update_interval)
 
         # processors
-        update_interval = datetime.timedelta(minutes=AUTOPOSTPROCESSER_FREQUENCY)
-        autoPostProcesserScheduler = scheduler.Scheduler(auto_postprocessor.PostProcessor(),
+        update_interval = datetime.timedelta(minutes=AUTOPOSTPROCESSOR_FREQUENCY)
+        autoPostProcessorScheduler = scheduler.Scheduler(auto_postprocessor.PostProcessor(),
                                                          cycleTime=update_interval,
-                                                         threadName="POSTPROCESSER",
+                                                         threadName="POSTPROCESSOR",
                                                          silent=not PROCESS_AUTOMATICALLY,
                                                          run_delay=update_interval)
         update_interval = datetime.timedelta(minutes=5)
@@ -1594,12 +1600,12 @@ def start():
 
             # start the post processor
             if PROCESS_AUTOMATICALLY:
-                autoPostProcesserScheduler.silent = False
-                autoPostProcesserScheduler.enable = True
+                autoPostProcessorScheduler.silent = False
+                autoPostProcessorScheduler.enable = True
             else:
-                autoPostProcesserScheduler.enable = False
-                autoPostProcesserScheduler.silent = True
-            autoPostProcesserScheduler.start()
+                autoPostProcessorScheduler.enable = False
+                autoPostProcessorScheduler.silent = True
+            autoPostProcessorScheduler.start()
 
             # start the subtitles finder
             if USE_SUBTITLES:
@@ -1640,7 +1646,7 @@ def halt():
                 searchQueueScheduler,
                 forcedSearchQueueScheduler,
                 manualSnatchScheduler,
-                autoPostProcesserScheduler,
+                autoPostProcessorScheduler,
                 traktCheckerScheduler,
                 properFinderScheduler,
                 subtitlesFinderScheduler,
@@ -1740,7 +1746,9 @@ def save_config():  # pylint: disable=too-many-statements, too-many-branches
     new_config['General']['nzb_method'] = NZB_METHOD
     new_config['General']['torrent_method'] = TORRENT_METHOD
     new_config['General']['usenet_retention'] = int(USENET_RETENTION)
-    new_config['General']['autopostprocesser_frequency'] = int(AUTOPOSTPROCESSER_FREQUENCY)
+    new_config['General']['cache_trimming'] = int(CACHE_TRIMMING)
+    new_config['General']['max_cache_age'] = int(MAX_CACHE_AGE)
+    new_config['General']['autopostprocessor_frequency'] = int(AUTOPOSTPROCESSOR_FREQUENCY)
     new_config['General']['dailysearch_frequency'] = int(DAILYSEARCH_FREQUENCY)
     new_config['General']['backlog_frequency'] = int(BACKLOG_FREQUENCY)
     new_config['General']['update_frequency'] = int(UPDATE_FREQUENCY)
