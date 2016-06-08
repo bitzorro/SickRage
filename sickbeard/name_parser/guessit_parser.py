@@ -61,17 +61,19 @@ class GuessitNameParser(object):
         r're:\bZT$',
     }
 
-    def guess(self, name):
+    def guess(self, name, show_type=None):
         """
         Given a release name, it guesses the episode information
 
         :param name: the release name
         :type name: str
+        :param show_type: None, regular or anime
+        :type show_type: str
         :return: the guessed properties
         :rtype: dict
         """
-        options = dict(type='episode', implicit=True, expected_title=self.expected_titles,
-                       expected_group=self.expected_groups)
+        options = dict(type='episode', implicit=True, expected_title=self.expected_titles, show_type=show_type,
+                       expected_group=self.expected_groups, episode_prefer_number=show_type == 'anime')
         guess = guessit.guessit(name, options=options)
 
         result = {
