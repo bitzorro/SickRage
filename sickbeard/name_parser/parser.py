@@ -53,10 +53,13 @@ class NameParser(object):
 
         if (self.showObj and not self.showObj.is_anime) or parse_method == 'normal':
             self._compile_regexes(self.NORMAL_REGEX)
+            self.show_type = 'regular'
         elif (self.showObj and self.showObj.is_anime) or parse_method == 'anime':
             self._compile_regexes(self.ANIME_REGEX)
+            self.show_type = 'anime'
         else:
             self._compile_regexes(self.ALL_REGEX)
+            self.show_type = None
 
     @staticmethod
     def clean_series_name(series_name):
@@ -112,7 +115,7 @@ class NameParser(object):
         bestResult = None
 
         if self.use_guessit:
-            guess = guessit_parser.guess(name)
+            guess = guessit_parser.guess(name, show_type=self.show_type)
             result = ParseResult(guess['original_name'])
             for key, value in guess.iteritems():
                 setattr(result, key, value)
@@ -427,7 +430,7 @@ class NameParser(object):
             return cached
 
         # break it into parts if there are any (dirname, file name, extension)
-        dir_name, file_name = ek(os.path.split, name)
+        dir_name, file_name = ek(os.path.split, name) if not self.use_guessit else ('', name)
 
         if self.file_name:
             base_file_name = remove_extension(file_name)

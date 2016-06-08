@@ -68,11 +68,11 @@ class AnimeAbsoluteEpisodeNumbers(Rule):
     """
     Medusa: If it's an anime, use absolute episode numbers
     """
-    priority = POST_PROCESS + 1
+    priority = POST_PROCESS - 1
     consequence = [RemoveMatch, AppendMatch]
 
     def when(self, matches, context):
-        if matches.tagged('anime') and matches.tagged('weak-duplicate'):
+        if context.get('show_type') != 'regular' and matches.tagged('anime') and matches.tagged('weak-duplicate'):
             season = matches.named('season', index=0)
             episode = matches.named('episode', index=0)
             if season and episode and season.end == episode.start and season.raw.isdigit() and episode.raw.isdigit():
@@ -94,7 +94,7 @@ class AbsoluteEpisodeNumbers(Rule):
     episode_words = ('e', 'episode', 'ep')
 
     def when(self, matches, context):
-        if not matches.named('season'):
+        if context.get('show_type') != 'regular' and not matches.named('season'):
             episodes = matches.named('episode')
             to_rename = []
             for episode in episodes:
