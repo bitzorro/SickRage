@@ -18,6 +18,13 @@ class ExpectedTitlePostProcessor(Rule):
     consequence = [RemoveMatch, AppendMatch]
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         titles = matches.tagged('expected')
 
         to_remove = []

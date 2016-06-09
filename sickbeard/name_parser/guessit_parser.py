@@ -10,6 +10,9 @@ from sickbeard.name_parser.rules.rules import rules
 
 
 class GuessitNameParser(object):
+    """
+    Guessit Name Parser
+    """
 
     expected_titles = {
         # guessit doesn't add dots for this show
@@ -82,8 +85,8 @@ class GuessitNameParser(object):
             'season_number': guess.get('season'),
             'release_group': guess.get('release_group'),
             'air_date': guess.get('date'),
-            'version': guess.get('version'),
-            'extra_info': ' '.join(_list(guess.get('other'), default=[])),
+            'version': guess.get('version', -1),
+            'extra_info': ' '.join(_list(guess.get('other'), default=[])) if guess.get('other') else None,
             'episode_numbers': _list(guess.get('episode')),
             'ab_episode_numbers': _list(guess.get('absolute_episode'))
         }
