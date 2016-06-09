@@ -86,7 +86,7 @@ class GuessitNameParser(object):
             'release_group': guess.get('release_group'),
             'air_date': guess.get('date'),
             'version': guess.get('version', -1),
-            'extra_info': ' '.join(_list(guess.get('other'), default=[])) if guess.get('other') else None,
+            'extra_info': ' '.join(_list(guess.get('other'))) if guess.get('other') else None,
             'episode_numbers': _list(guess.get('episode')),
             'ab_episode_numbers': _list(guess.get('absolute_episode'))
         }
@@ -94,8 +94,8 @@ class GuessitNameParser(object):
         return result
 
 
-def _list(value, default=None):
-    return sorted(value) if isinstance(value, list) else [value] if value is not None else default
+def _list(value):
+    return sorted(value) if isinstance(value, list) else [value] if value is not None else []
 
 
 default_api.rebulk.rebulk(rules())
