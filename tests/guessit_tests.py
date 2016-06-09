@@ -10,6 +10,9 @@ from nose_parameterized import parameterized
 from sickbeard.name_parser.guessit_parser import parser
 
 
+current_folder = os.path.dirname(os.path.realpath(__file__))
+
+
 class GuessitTests(unittest.TestCase):
     files = {
         'tvshows': 'tvshows.yml',
@@ -29,7 +32,7 @@ class GuessitTests(unittest.TestCase):
 
     parameters = []
     for scenario_name, file_name in files.iteritems():
-        with open(os.path.join('datasets', file_name), 'r') as stream:
+        with open(os.path.join(current_folder, 'datasets', file_name), 'r') as stream:
             data = yaml.safe_load(stream)
 
         for release_name, release_values in data.iteritems():
