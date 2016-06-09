@@ -34,8 +34,10 @@ from sickrage.helper.exceptions import ex
 from sickbeard.helpers import remove_non_release_groups
 import dateutil
 
+
 pre_cleanup_re = re.compile(r'(\.vol\d+\+\d+)?((\.par2\b)|(\.nzb\b)|(\.mkv\b)).*((\d+\.of\.\d+)|(\(\d+/\d+\))).*$',
                             flags=re.IGNORECASE)
+
 
 class NameParser(object):
     ALL_REGEX = 0
