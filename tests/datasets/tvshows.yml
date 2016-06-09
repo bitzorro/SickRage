@@ -1,0 +1,67 @@
+# standard_repeat
+? Show.Name.S01E02.S01E03.HDTV.720p.x264-Group
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [2, 3]
+  release_group: Group
+
+# standard_repeat
+? Show Name - S01E02 - S01E03 - S01E04 Episode Name
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [2, 3, 4]
+
+# fov_repeat
+? Show.Name.1x02.1x03.Bluray.1080p.x265-SuperGroup
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [2, 3]
+  release_group: SuperGroup
+
+# fov_repeat
+? Show Name 1x02 1x03 1x04 Episode Name
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [2, 3, 4]
+
+# standard
+? Show.Name.S01E02.HDTV.720p.x264-Group
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [2]
+  release_group: Group
+
+# standard
+? Show Name - S01E04 Episode Name
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [4]
+
+# standard
+? Show.Name.S01.E02.My.Episode.Name
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [2]
+
+# standard
+? Show.Name.S01E02E03.HDTV.720p.x264-Group
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [2, 3]
+  release_group: Group
+
+# standard
+? Show Name - S01E02-03 - Episode Name
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [2, 3]
+
+# standard
+? Show.Name.S01.E02.E03
+: series_name: Show Name
+  season_number: 1
+  episode_numbers: [2, 3]
+
+
+
+
