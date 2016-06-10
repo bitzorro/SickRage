@@ -93,7 +93,7 @@ class GuessitNameParser(object):
         # TODO: Remove file_title when this bug is fixed
         result = {
             'original_name': name,
-            'series_name': guess.get('extended_title') or guess.get('title'),
+            'series_name': guess.get('extended_title') or guess.get('film_title') or guess.get('title'),
             'season_number': guess.get('season'),
             'release_group': guess.get('release_group'),
             'air_date': guess.get('date'),
