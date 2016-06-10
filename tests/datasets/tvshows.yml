@@ -448,3 +448,20 @@
 #  format: DVD
 #  type: episode
 
+
+# film_title problem
+# https://github.com/guessit-io/guessit/issues/294
+# TODO: Remove file_title and film when this bug is fixed
+? Show.Name.S03E16.1080p.WEB-DL.DD5.1.H.264-GOLF68
+#: title: Show Name
+: film_title: Show Name
+  film: 68
+  season: 3
+  episode: 16
+  screen_size: 1080p
+  format: WEB-DL
+  audio_codec: DolbyDigital
+  audio_channels: '5.1'
+  video_codec: h264
+  release_group: GOLF68
+  type: episode
