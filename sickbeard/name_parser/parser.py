@@ -117,7 +117,7 @@ class NameParser(object):
         bestResult = None
 
         if self.use_guessit:
-            guess = guessit_parser.guess(name, show_type=self.show_type)
+            guess = guessit_parser.parse(name, show_type=self.show_type)
             result = ParseResult(guess['original_name'])
             for key, value in guess.iteritems():
                 setattr(result, key, value)
@@ -480,6 +480,9 @@ class NameParser(object):
 
         final_result.show = self._combine_results(file_name_result, dir_name_result, 'show')
         final_result.quality = self._combine_results(file_name_result, dir_name_result, 'quality')
+
+        if True:
+            return final_result
 
         if not final_result.show:
             raise InvalidShowException(u"Unable to match {0} to a show in your database. Parser result: {1}".format(

@@ -21,7 +21,6 @@ setup(
         'coveralls',
         'nose',
         'nose-parameterized',
-        'pyyaml',
         'rednose',
         'mock',
     ],
