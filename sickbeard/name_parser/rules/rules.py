@@ -243,6 +243,13 @@ class AnimeAbsoluteEpisodeNumbers(Rule):
     consequence = [RemoveMatch, AppendMatch]
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         # only for shows that seems to be animes
         if context.get('show_type') != 'regular' and matches.tagged('anime') and matches.tagged('weak-duplicate'):
             season = matches.named('season', index=0)
@@ -292,6 +299,13 @@ class AbsoluteEpisodeNumbers(Rule):
     episode_words = ('e', 'episode', 'ep')
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         # if it seems to be anime and it doesn't have season
         if context.get('show_type') != 'regular' and not matches.named('season'):
             episodes = matches.named('episode')
@@ -354,6 +368,13 @@ class PartsAsEpisodeNumbers(Rule):
     consequence = RenameMatch('episode')
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         # only if there's no season and no episode
         if not matches.named('season') and not matches.named('episode'):
             return matches.named('part')
@@ -399,6 +420,13 @@ class FixSeasonEpisodeDetection(Rule):
     consequence = RenameMatch('episode')
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         seasons = matches.named('season')
         # bug happens when there are 2 seasons and no episode
         if seasons and len(seasons) == 2 and not matches.named('episode'):
@@ -448,6 +476,13 @@ class FixSeasonNotDetected(Rule):
     consequence = [RemoveMatch, RenameMatch('season')]
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         episode = matches.named('episode', index=0)
         if episode:
             season = matches.previous(episode, index=-1)
@@ -505,6 +540,13 @@ class FixWrongSeasonAndReleaseGroup(Rule):
     }
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         seasons = matches.named('season')
         # only when there are 2 seasons
         if seasons and len(seasons) == 2:
@@ -569,6 +611,13 @@ class FixSeasonRangeDetection(Rule):
     range_separator = ('-', '-s', '.to.s')
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         seasons = matches.named('season')
         # only when there are 2 seasons
         if seasons and len(seasons) == 2:
@@ -628,6 +677,13 @@ class FixEpisodeRangeDetection(Rule):
     consequence = AppendMatch
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         episodes = matches.named('episode')
         # only when there are 2 episodes
         if episodes and len(episodes) == 2:
@@ -726,6 +782,13 @@ class ReleaseGroupPostProcessor(Rule):
     ]
 
     def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
         release_groups = matches.named('release_group')
         to_remove = []
         to_append = []
