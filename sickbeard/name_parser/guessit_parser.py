@@ -26,7 +26,7 @@ class GuessitNameParser(object):
 
         # https://github.com/guessit-io/guessit/issues/298
         # guessit identifies as website
-        r're:^Dark Net\b',
+        r're:^\w+ Net\b',
 
         # TODO: needs investigation...
         r're:^Storm Chasers\b',
@@ -77,11 +77,23 @@ class GuessitNameParser(object):
         """
         options = dict(type='episode', implicit=True, expected_title=self.expected_titles, show_type=show_type,
                        expected_group=self.expected_groups, episode_prefer_number=show_type == 'anime')
-        guess = guessit.guessit(name, options=options)
+        return guessit.guessit(name, options=options)
 
+    def parse(self, name, show_type=None):
+        """
+        Same as self.guess(..) method but returns a dictionary with keys and values according to ParseResult
+        :param name:
+        :param show_type:
+        :return:
+        """
+        guess = self.guess(name, show_type=show_type)
+
+        # film_title might contain the correct title due to this bug:
+        # https://github.com/guessit-io/guessit/issues/294
+        # TODO: Remove file_title when this bug is fixed
         result = {
             'original_name': name,
-            'series_name': guess.get('extended_title'),
+            'series_name': guess.get('extended_title') or guess.get('title'),
             'season_number': guess.get('season'),
             'release_group': guess.get('release_group'),
             'air_date': guess.get('date'),

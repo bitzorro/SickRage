@@ -1,67 +1,450 @@
 # standard_repeat
 ? Show.Name.S01E02.S01E03.HDTV.720p.x264-Group
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [2, 3]
+: title: Show Name
+  season: 1
+  episode: [2, 3]
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
   release_group: Group
+  type: episode
 
 # standard_repeat
 ? Show Name - S01E02 - S01E03 - S01E04 Episode Name
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [2, 3, 4]
+: title: Show Name
+  season: 1
+  episode: [2, 3, 4]
+  episode_title: Episode Name
+  type: episode
 
 # fov_repeat
 ? Show.Name.1x02.1x03.Bluray.1080p.x265-SuperGroup
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [2, 3]
+: title: Show Name
+  season: 1
+  episode: [2, 3]
+  format: BluRay
+  screen_size: 1080p
+  video_codec: h265
   release_group: SuperGroup
+  type: episode
 
 # fov_repeat
 ? Show Name 1x02 1x03 1x04 Episode Name
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [2, 3, 4]
+: title: Show Name
+  season: 1
+  episode: [2, 3, 4]
+  episode_title: Episode Name
+  type: episode
 
 # standard
 ? Show.Name.S01E02.HDTV.720p.x264-Group
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [2]
+: title: Show Name
+  season: 1
+  episode: 2
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
   release_group: Group
+  type: episode
 
 # standard
 ? Show Name - S01E04 Episode Name
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [4]
+: title: Show Name
+  season: 1
+  episode: 4
+  episode_title: Episode Name
+  type: episode
 
 # standard
 ? Show.Name.S01.E02.My.Episode.Name
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [2]
+: title: Show Name
+  season: 1
+  episode: 2
+  episode_title: My Episode Name
+  type: episode
 
 # standard
 ? Show.Name.S01E02E03.HDTV.720p.x264-Group
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [2, 3]
+: title: Show Name
+  season: 1
+  episode: [2, 3]
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
   release_group: Group
+  type: episode
 
 # standard
 ? Show Name - S01E02-03 - Episode Name
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [2, 3]
+: title: Show Name
+  season: 1
+  episode: [2, 3]
+  episode_title: Episode Name
+  type: episode
 
 # standard
 ? Show.Name.S01.E02.E03
-: series_name: Show Name
-  season_number: 1
-  episode_numbers: [2, 3]
+: title: Show Name
+  season: 1
+  episode: [2, 3]
+  type: episode
+
+# fov
+? Show_Name.1x02.HDTV_720p_x264-Group
+: title: Show Name
+  season: 1
+  episode: 2
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# fov
+? Show Name - 1x04 Episode Name
+: title: Show Name
+  season: 1
+  episode: 4
+  episode_title: Episode Name
+  type: episode
+
+# fov
+? Show_Name.1x02x03x04.DVD.480p_xvid-SomeGroup
+: title: Show Name
+  season: 1
+  episode: [2, 3, 4]
+  format: DVD
+  screen_size: 480p
+  video_codec: XviD
+  release_group: SomeGroup
+  type: episode
+
+# fov
+? Show Name - 1x02-03-04 - My Episode
+: title: Show Name
+  season: 1
+  episode: [2, 3, 4]
+  episode_title: My Episode
+  type: episode
+
+# scene_date_format
+? Show.Name.2010.11.23.HDTV.720p.x264-Group
+: title: Show Name
+  date: 2010-11-23
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# scene_date_format
+? Show Name - 2010.11.23 - Episode Name
+: title: Show Name
+  date: 2010-11-23
+  episode_title: Episode Name
+  type: episode
+
+# scene_sports_format
+# TO FIX: current parser and guessit parser cannot parse this correctly
+? Show.Name.100.Event.2010.11.23.HDTV.720p.x264-Group
+: title: Show Name
+  season: 1 # ?
+  episode: 0 # ?
+  episode_title: Event
+  date: 2010-11-23
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# scene_sports_format
+? Show.Name.2011.12.24.HDTV.720p.x264-Group
+: title: Show Name
+  date: 2011-12-24
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# scene_sports_format
+? Show Name - 2010.11.23 - Episode Name
+: title: Show Name
+  date: 2010-11-23
+  episode_title: Episode Name
+  type: episode
+
+# stupid
+# TO FIX: current parser doesn't return series_name
+#         guessit parser cannot parse this correctly
+#? tpz-abc102
+#: title: abc
+#  season: 1
+#  episode: 2
+#  release_group: tpz
+#  type: episode
+
+# verbose
+? Show Name Season 1 Episode 2 Ep Name
+: title: Show Name
+  season: 1
+  episode: 2
+  episode_title: Ep Name
+  type: episode
+
+# season_only
+? Show.Name.S01.HDTV.720p.x264-Group
+: title: Show Name
+  season: 1
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# no_season_multi_ep
+? Show.Name.E02-03.HDTV.720p.X264-Group
+: title: Show Name
+  episode: [2, 3]
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
+  release_group: Group
+  type: episode
 
 
+# no_season_multi_ep
+? Show.Name.E02.2010
+: title: Show Name
+  episode: 2
+  year: 2010
+  type: episode
 
+# no_season_general
+? Show.Name.E23.Test
+: title: Show Name
+  episode: 23
+  episode_title: Test
+  type: episode
+
+# TODO: add all regexes from regexes.py
+
+
+# ExpectedTitlePostProcessor
+? Show.Net.S01E06.720p
+: title: Show Net
+  season: 1
+  episode: 6
+  screen_size: 720p
+  type: episode
+
+# CreateExtendedTitle
+? Show.Name.US.S03.720p.BluRay.x264-SuperGroup
+: title: Show Name
+  extended_title: Show Name US
+  country: US
+  season: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# AnimeWithSeasonAbsoluteEpisodeNumbers
+? "[Group].Show.Name.S2.-.19.[1080p]"
+: title: Show Name S2
+  absolute_episode: 19
+  screen_size: 1080p
+  release_group: Group
+  type: episode
+
+# AnimeAbsoluteEpisodeNumbers
+? "[Group].Show.Name.S2.-.102.[720p]"
+: title: Show Name S2
+  absolute_episode: 102
+  screen_size: 720p
+  release_group: Group
+  type: episode
+
+# AbsoluteEpisodeNumbers
+? Show.Name.10.720p
+: title: Show Name
+  absolute_episode: 10
+  screen_size: 720p
+  type: episode
+
+# PartsAsEpisodeNumbers
+? Show.Name.Part.3.720p.HDTV.x264-Group
+: title: Show Name
+  episode: 3
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# FixSeasonEpisodeDetection
+? Some.Show.S02E14.X264.1080p.HDTV
+: title: Some Show
+  season: 2
+  episode: 14
+  video_codec: h264
+  screen_size: 1080p
+  format: HDTV
+  type: episode 
+
+# FixSeasonNotDetected
+? Show.Name.-.Season.3.-.720p.BluRay.-.x264.-.Group
+: title: Show Name
+  season: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# FixWrongSeasonAndReleaseGroup
+? Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
+: title: Show Name
+  season: 6
+  episode: 4
+  screen_size: 1080i
+  format: HDTV
+  audio_codec: DolbyDigital
+  audio_channels: '5.1'
+  video_codec: h264
+  release_group: BS666
+  type: episode
+
+# FixSeasonRangeDetection
+? show name s01-s04
+: title: show name
+  season: [1, 2, 3, 4]
+  type: episode
+
+# FixEpisodeRangeDetection
+? show name s02e01-e04
+: title: show name
+  season: 2
+  episode: [1, 2, 3, 4]
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264-GROUP[TRASH]
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264-GROUP(TRASH)
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264-GROUP=={{TRASH}}==
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264-123mb.GROUP
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264-reenc.GROUP
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264-GROUP.rar
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  mimetype: application/rar
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264-GROUP.trash
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264.NLSubs.Group
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264...Group
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264.Group.[
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# https://github.com/guessit-io/guessit/issues/304
+#? Show.season_1-10.(DVDrip)
+#: title: Show
+#  season: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+#  format: DVD
+#  type: episode
 
