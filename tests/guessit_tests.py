@@ -5,8 +5,10 @@ Guessit name parser tests
 import os
 import sys
 
-sys.path.insert(1, os.path.abspath(os.path.join(os.path.dirname(__file__), '../lib')))
-sys.path.insert(1, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+sys.path.insert(1, os.path.realpath(os.path.join(__location__, '../lib')))
+sys.path.insert(1, os.path.realpath(os.path.join(__location__, '..')))
 
 import unittest
 import yaml
@@ -14,9 +16,6 @@ import yaml
 from guessit.yamlutils import OrderedDictYAMLLoader
 from nose_parameterized import parameterized
 from sickbeard.name_parser.guessit_parser import parser
-
-
-current_folder = os.path.dirname(os.path.realpath(__file__))
 
 
 class GuessitTests(unittest.TestCase):
@@ -29,7 +28,7 @@ class GuessitTests(unittest.TestCase):
 
     parameters = []
     for scenario_name, file_name in files.iteritems():
-        with open(os.path.join(current_folder, 'datasets', file_name), 'r') as stream:
+        with open(os.path.join(__location__, 'datasets', file_name), 'r') as stream:
             data = yaml.load(stream, OrderedDictYAMLLoader)
 
         for release_name, expected in data.iteritems():
@@ -38,6 +37,14 @@ class GuessitTests(unittest.TestCase):
 
     @parameterized.expand(parameters)
     def test_guess(self, scenario_name, release_name, expected):
+        """
+        :param scenario_name:
+        :type scenario_name: str
+        :param release_name: the input release name
+        :type release_name: str
+        :param expected: the expected guessed dict
+        :type expected: dict
+        """
         actual = parser.guess(release_name)
         actual = {k: v for k, v in actual.iteritems()}
         if 'country' in actual:
@@ -48,11 +55,11 @@ class GuessitTests(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     # for debugging purposes
-    def dump(self, scenario_name, release_name, values):
-        print('')
-        print('# {scenario_name}'.format(scenario_name=scenario_name))
-        print('? {release_name}'.format(release_name=release_name))
-        start = ':'
-        for k, v in values.iteritems():
-            print('{start} {k}: {v}'.format(start=start, k=k, v=v))
-            start = ' '
+    #def dump(self, scenario_name, release_name, values):
+    #    print('')
+    #    print('# {scenario_name}'.format(scenario_name=scenario_name))
+    #    print('? {release_name}'.format(release_name=release_name))
+    #    start = ':'
+    #    for k, v in values.iteritems():
+    #        print('{start} {k}: {v}'.format(start=start, k=k, v=v))
+    #        start = ' '
