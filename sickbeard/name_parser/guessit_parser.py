@@ -28,6 +28,9 @@ class GuessitNameParser(object):
         # guessit identifies as website
         r're:^\w+ Net\b',
 
+        # guessit confuses Pan with language Panjabi
+        r're:\bPan de Peace\b!',
+
         # TODO: needs investigation...
         r're:^Storm Chasers\b',
     }
@@ -40,9 +43,7 @@ class GuessitNameParser(object):
         r're:\bELITETORRENT\b',
         r're:\bF4ST3R\b',
         r're:\bF4ST\b',
-        r're:\bGOLF68\b',
         r're:\bJIVE\b',
-        r're:\bNF69\b',
         r're:\bNovaRip\b',
         r're:\bPARTiCLE\b',
         r're:\bPOURMOi\b',
@@ -88,25 +89,22 @@ class GuessitNameParser(object):
         """
         guess = self.guess(name, show_type=show_type)
 
-        # film_title might contain the correct title due to this bug:
-        # https://github.com/guessit-io/guessit/issues/294
-        # TODO: Remove file_title when this bug is fixed
         result = {
             'original_name': name,
-            'series_name': guess.get('extended_title') or guess.get('film_title') or guess.get('title'),
+            'series_name': guess.get('extended_title') or guess.get('title'),
             'season_number': guess.get('season'),
             'release_group': guess.get('release_group'),
             'air_date': guess.get('date'),
             'version': guess.get('version', -1),
-            'extra_info': ' '.join(_list(guess.get('other'))) if guess.get('other') else None,
-            'episode_numbers': _list(guess.get('episode')),
-            'ab_episode_numbers': _list(guess.get('absolute_episode'))
+            'extra_info': ' '.join(ensure_list(guess.get('other'))) if guess.get('other') else None,
+            'episode_numbers': ensure_list(guess.get('episode')),
+            'ab_episode_numbers': ensure_list(guess.get('absolute_episode'))
         }
 
         return result
 
 
-def _list(value):
+def ensure_list(value):
     return sorted(value) if isinstance(value, list) else [value] if value is not None else []
 
 
