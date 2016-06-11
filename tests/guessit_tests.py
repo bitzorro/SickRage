@@ -3,23 +3,15 @@
 Guessit name parser tests
 """
 import os
-import sys
-
-import datetime
-
-from babelfish.country import Country
-
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-
-sys.path.insert(1, os.path.realpath(os.path.join(__location__, '../lib')))
-sys.path.insert(1, os.path.realpath(os.path.join(__location__, '..')))
-
 import unittest
 import yaml
 
 from guessit.yamlutils import OrderedDictYAMLLoader
 from nose_parameterized import parameterized
 from sickbeard.name_parser.guessit_parser import parser
+
+
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
 class GuessitTests(unittest.TestCase):
