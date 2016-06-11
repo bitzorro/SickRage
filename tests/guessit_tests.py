@@ -41,7 +41,8 @@ class GuessitTests(unittest.TestCase):
         :param expected: the expected guessed dict
         :type expected: dict
         """
-        actual = parser.guess(release_name)
+        options = expected.pop('options', {})
+        actual = parser.guess(release_name, show_type=options.get('show_type'))
         actual = {k: v for k, v in actual.iteritems()}
 
         def format(param):

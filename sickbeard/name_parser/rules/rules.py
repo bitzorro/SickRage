@@ -76,20 +76,18 @@ class FixAnimeReleaseGroup(Rule):
         # the problem happens when there's no match before the title...
         if title and not matches.previous(title):
             holes = matches.holes(start=0, end=title.start)
+            hole = holes[0] if len(holes) == 1 else None
             # ... and there's one hole (the correct release group)
-            if len(holes) == 1:
-                hole = holes[0]
-                if hole.raw[0] == '[' and hole.raw[-1] == ']':
-                    if hole.value[1:-1].lower() not in self.blacklist:
-                        new_release_group = copy.copy(hole)
-                        new_release_group.name = 'release_group'
-                        new_release_group.value = hole.value[1:-1]
-                        new_release_group.tags.append('anime')
+            if hole and hole.raw[0] == '[' and hole.raw[-1] == ']' and hole.value[1:-1].lower() not in self.blacklist:
+                new_release_group = copy.copy(hole)
+                new_release_group.name = 'release_group'
+                new_release_group.value = hole.value[1:-1]
+                new_release_group.tags.append('anime')
 
-                        to_append = new_release_group
-                        to_remove = matches.named('release_group')
+                to_append = new_release_group
+                to_remove = matches.named('release_group')
 
-                        return to_remove, to_append
+                return to_remove, to_append
 
 
 class FixScreenSizeConflict(Rule):
@@ -130,6 +128,7 @@ class FixScreenSizeConflict(Rule):
     """
     priority = POST_PROCESS
     consequence = RemoveMatch
+    conflict_list = ('season', 'episode')
 
     def when(self, matches, context):
         """
@@ -139,10 +138,80 @@ class FixScreenSizeConflict(Rule):
         :type context: dict
         :return:
         """
-        screen_sizes = matches.named('screen_size')
-        for screen_size in screen_sizes:
-            conflicts = matches.at_match(screen_size, predicate=lambda m: m.name in ('season', 'episode'))
-            return conflicts
+        screen_size = matches.named('screen_size', index=0)
+        return matches.at_match(screen_size, predicate=lambda m: m.name in self.conflict_list) if screen_size else None
+
+
+class FixInvalidAlternativeTitle(Rule):
+    """
+    Some release names have season/episode defined twice, and one of them becomes an alternative_title.
+    This fix will remove the invalid alternative_title
+
+    e.g.: "Show Name - 313-314 - s16e03-04"
+
+    guessit -t episode "Show Name - 313-314 - s16e03-04"
+
+    without this fix:
+        For: Show Name - 313-314 - s16e03-04
+        GuessIt found: {
+            "title": "Show Name",
+            "alternative_title": "313-314",
+            "season": 16,
+            "episode": [
+                3,
+                4
+            ],
+            "type": "episode"
+        }
+
+
+    with this fix:
+        For: Show Name - 313-314 - s16e03-04
+        GuessIt found: {
+            "title": "Show Name",
+            "season": 16,
+            "episode": [
+                3,
+                4
+            ],
+            "type": "episode"
+        }
+
+
+    """
+    priority = POST_PROCESS
+    consequence = [RemoveMatch, AppendMatch]
+    range_re = re.compile(r'\b\d{3,4}\-\d{3,4}$')
+
+    def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
+        to_remove = []
+        to_append = []
+
+        alternative_titles = matches.named('alternative_title')
+        title = matches.named('title', index=0)
+
+        if title:
+            new_value = self.range_re.sub('', title.value).strip()
+            if new_value != title.value:
+                new_title = copy.copy(title)
+                new_title.value = new_value
+                new_title.end = title.end - len(title.value) + len(new_value)
+                to_append.append(new_title)
+                to_remove.append(title)
+
+        for alternative_title in alternative_titles:
+            # Not checking all numbers, only the pattern
+            if self.range_re.match(alternative_title.value):
+                to_remove.append(alternative_title)
+
+        return to_remove, to_append
 
 
 class FixWrongTitleDueToFilmTitle(Rule):
@@ -348,6 +417,7 @@ class CreateExtendedTitleWithCountryOrYear(Rule):
     """
     priority = POST_PROCESS
     consequence = AppendMatch
+    affected_names = ('country', 'year')
 
     def when(self, matches, context):
         """
@@ -364,7 +434,7 @@ class CreateExtendedTitleWithCountryOrYear(Rule):
         after_title = matches.next(title, index=0)
 
         # only if there's a country or year
-        if after_title and after_title.name in ('country', 'year'):
+        if after_title and after_title.name in self.affected_names:
             next_match = matches.next(after_title, index=0)
             # Only add country or year if the next match is season, episode or date
             if next_match and next_match.name in ('season', 'episode', 'date'):
@@ -721,6 +791,7 @@ class FixSeasonEpisodeDetection(Rule):
     """
     priority = POST_PROCESS
     consequence = RenameMatch('episode')
+    codec_names = ('h264', 'h265')
 
     def when(self, matches, context):
         """
@@ -735,7 +806,7 @@ class FixSeasonEpisodeDetection(Rule):
         if seasons and len(seasons) == 2 and not matches.named('episode'):
             next_match = matches.next(seasons[-1], index=0)
             # guessit gets confused when the next match is x264 or x265
-            if next_match and next_match.name == 'video_codec' and next_match.value in ('h264', 'h265'):
+            if next_match and next_match.name == 'video_codec' and next_match.value in self.codec_names:
                 # rename the second season to episode
                 episode = seasons[1]
                 return episode
@@ -787,10 +858,9 @@ class FixSeasonNotDetected(Rule):
         :return:
         """
         episode = matches.named('episode', index=0)
-        if episode:
-            season = matches.previous(episode, index=-1)
-            if season and season.name == 'alternative_title' and season.value.lower() == 'season':
-                return season, episode
+        season = matches.previous(episode, index=-1) if episode else None
+        if season and season.name == 'alternative_title' and season.value.lower() == 'season':
+            return season, episode
 
 
 class FixWrongSeasonAndReleaseGroup(Rule):
@@ -852,28 +922,28 @@ class FixWrongSeasonAndReleaseGroup(Rule):
         """
         seasons = matches.named('season')
         # only when there are 2 seasons
-        if seasons and len(seasons) == 2:
-            last_season = seasons[-1]
-            previous = matches.previous(last_season, index=-1)
+        last_season = seasons[-1] if len(seasons) == 2 else None
+        previous = matches.previous(last_season, index=-1) if last_season else None
+        if previous and last_season:
+            holes = matches.holes(start=previous.end, end=last_season.start)
+            hole = holes[0] if len(holes) == 1 else None
             # there's only 1 hole before the season
-            if previous:
-                holes = matches.holes(start=previous.end, end=last_season.start)
-                if len(holes) == 1:
-                    to_remove = []
-                    to_append = []
-                    prefix = previous.value if previous.name == 'release_group' else ''
-                    correct_release_group = prefix + holes[0].raw + last_season.raw
-                    # and this hole is part of the problematic words
-                    for word in self.problematic_words:
-                        if word in correct_release_group.lower():
-                            new_release_group = copy.copy(previous)
-                            new_release_group.value = correct_release_group
+            if hole:
+                to_remove = []
+                to_append = []
+                prefix = previous.value if previous.name == 'release_group' else ''
+                correct_release_group = prefix + hole.raw + last_season.raw
+                # and this hole is part of the problematic words
+                for word in self.problematic_words:
+                    if word in correct_release_group.lower():
+                        new_release_group = copy.copy(previous)
+                        new_release_group.value = correct_release_group
 
-                            to_remove.append(last_season)
-                            to_remove.append(previous)
-                            to_append.append(new_release_group)
+                        to_remove.append(last_season)
+                        to_remove.append(previous)
+                        to_append.append(new_release_group)
 
-                    return to_remove, to_append
+                return to_remove, to_append
 
 
 class FixSeasonRangeDetection(Rule):
@@ -923,22 +993,21 @@ class FixSeasonRangeDetection(Rule):
         """
         seasons = matches.named('season')
         # only when there are 2 seasons
-        if seasons and len(seasons) == 2:
-            start_season = seasons[0]
-            end_season = seasons[-1]
-            # and first season is lesser than the second and the difference is not too big
-            if 1 < end_season.value - start_season.value < 100:
-                season_separator = matches.input_string[start_season.end:end_season.start]
-                # and they are separated by a 'range separator'
-                if season_separator.lower() in self.range_separator:
-                    to_append = []
-                    # then create the missing numbers
-                    for i in range(start_season.value + 1, end_season.value):
-                        new_season = copy.copy(start_season)
-                        new_season.value = i
-                        to_append.append(new_season)
+        start_season = seasons[0] if len(seasons) == 2 else None
+        end_season = seasons[-1] if len(seasons) == 2 else None
+        # and first season is lesser than the second and the difference is not too big
+        if start_season and end_season and 1 < end_season.value - start_season.value < 100:
+            season_separator = matches.input_string[start_season.end:end_season.start]
+            # and they are separated by a 'range separator'
+            if season_separator.lower() in self.range_separator:
+                to_append = []
+                # then create the missing numbers
+                for i in range(start_season.value + 1, end_season.value):
+                    new_season = copy.copy(start_season)
+                    new_season.value = i
+                    to_append.append(new_season)
 
-                    return to_append
+                return to_append
 
 
 class FixEpisodeRangeDetection(Rule):
@@ -988,34 +1057,32 @@ class FixEpisodeRangeDetection(Rule):
         :return:
         """
         episodes = matches.named('episode')
-        if len(episodes) == 1:
-            episode_count = matches.next(episodes[0], index=0)
-            if episode_count and episode_count.name == 'episode_count':
-                episodes.append(episode_count)
+        episode_count = matches.next(episodes[0], index=0) if len(episodes) == 1 else None
+        if episode_count and episode_count.name == 'episode_count':
+            episodes.append(episode_count)
 
         # only when there are 2 episodes
-        if episodes and len(episodes):
-            start_episode = episodes[0]
-            end_episode = episodes[-1]
-            # and first episode is lesser than the second and the difference is not too big
-            if 1 < end_episode.value - start_episode.value < 100:
+        start_episode = episodes[0] if len(episodes) == 2 else None
+        end_episode = episodes[-1] if len(episodes) == 2 else None
+
+        # and first episode is lesser than the second and the difference is not too big
+        if start_episode and end_episode and 1 < end_episode.value - start_episode.value < 100:
                 holes = matches.holes(start=start_episode.end, end=end_episode.start)
-                if len(holes) == 1:
-                    hole = holes[0]
-                    # and they are separated by a 'range separator'
-                    if hole.value.lower() in ('-', '-e'):
-                        to_append = []
-                        to_rename = []
-                        # then create the missing numbers
-                        for i in range(start_episode.value + 1, end_episode.value):
-                            new_season = copy.copy(start_episode)
-                            new_season.value = i
-                            to_append.append(new_season)
+                hole = holes[0] if len(holes) == 1 else None
+                # and they are separated by a 'range separator'
+                if hole and hole.value.lower() in ('-', '-e'):
+                    to_append = []
+                    to_rename = []
+                    # then create the missing numbers
+                    for i in range(start_episode.value + 1, end_episode.value):
+                        new_season = copy.copy(start_episode)
+                        new_season.value = i
+                        to_append.append(new_season)
 
-                        if end_episode.name == 'episode_count':
-                            to_rename.append(end_episode)
+                    if end_episode.name == 'episode_count':
+                        to_rename.append(end_episode)
 
-                        return to_append, to_rename
+                    return to_append, to_rename
 
 
 class FixWrongEpisodeDetectionInSeasonRange(Rule):
@@ -1270,6 +1337,7 @@ def rules():
     """
     return Rebulk().rules(
         FixAnimeReleaseGroup,
+        FixInvalidAlternativeTitle,
         FixScreenSizeConflict,
         FixWrongTitleDueToFilmTitle,
         FixSeasonNotDetected,

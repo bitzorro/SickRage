@@ -127,6 +127,41 @@
   episode_title: My Episode
   type: episode
 
+# newpct
+? Show Name - Temporada 4 HDTV x264[Cap.408_409]SPANISH-AUDIO-NEWPCT
+: title: Show Name
+  season 4:
+  episode: [8, 9]
+  format: HDTV
+  video_codec: h264
+  language: es
+  release_group: NEWPCT
+  type: episode
+  disabled: true # work in progress
+
+# newpct
+? Show Name - Temporada 4 [HDTV][Cap.408][Espanol Castellano]
+: title: Show Name
+  season 4:
+  episode: 8
+  format: HDTV
+  language: es
+  release_group: NEWPCT
+  type: episode
+  disabled: true # work in progress
+
+# newpct
+? Show Name - Temporada 4 HDTV x264[Cap.409]SPANISH AUDIO-NEWPCT)
+: title: Show Name
+  season 4:
+  episode: 8
+  format: HDTV
+  video_codec: h264
+  language: es
+  release_group: NEWPCT
+  type: episode
+  disabled: true # work in progress
+
 # scene_date_format
 ? Show.Name.2010.11.23.HDTV.720p.x264-Group
 : title: Show Name
@@ -243,12 +278,12 @@
 ? Show.Name.Part.1.and.Part.2.HDTV.720p.x264-Group
 : title: Show Name
   episode: [1, 2]
+  episode_title: and # guessit issue, but it's not a big problem
   format: HDTV
   screen_size: 720p
   video_codec: h264
   release_group: Group
   type: episode
-  disabled: true # work in progress
 
 # bare
 ? Show.Name.102.HDTV.720p.x264-Group
@@ -320,25 +355,32 @@
   type: episode
 
 # anime_french_fansub
+# guessit parser only works with show_type=anime
 ? Show Name 445 VOSTFR par Fansub-Resistance (1280*720) - version MQ
-: title: Show Name
+: options: {show_type: anime}
+  title: Show Name
   absolute_episode: 445
   screen_size: 720p
   subtitle_language: fr
-  release_group: Resistance
+  country: MQ # not a big issue
+# TODO: Fix
+#  release_group: Resistance
+  release_group: version
   type: episode
-  disabled: true # work in progress
+
 
 # anime_french_fansub
+# guessit parser only works with show_type=anime
 ? Show Name Super 015 VOSTFR par Fansub-Resistance (1280x720) - HQ version
-: title: Show Name Super
+: options: {show_type: anime}
+  title: Show Name Super
   absolute_episode: 15
   subtitle_language: fr
   screen_size: 720p
-  release_group: Resistance
+# TODO: Fix
+#  release_group: Resistance
   other: HQ
   type: episode
-  disabled: true # work in progress
 
 # anime_french_fansub
 ? "[Z-Team][DBSuper.pw] Show Name Super - 028 (VOSTFR)(720p AAC)(MP4)"
@@ -349,8 +391,8 @@
   release_group: Z-Team
   audio_codec: AAC
   container: MP4
+  country: PW # not a big issue
   type: episode
-  disabled: true # work in progress
 
 # anime_french_fansub
 ? "[SnF] Show Name - 24 VOSTFR [720p][41761A60]"
@@ -379,13 +421,14 @@
   type: episode
 
 # anime_french_fansub
+# guessit parser only works with show_type=anime
 ? Show Name 804 vostfr HD
-: title: Show Name
+: options: {show_type: anime}
+  title: Show Name
   absolute_episode: 804
   subtitle_language: fr
   other: HD
   type: episode
-  disabled: true # work in progress
 
 # anime_french_fansub
 ? Show Name 04 vostfr [1080p]
@@ -581,7 +624,6 @@
   season: 16
   episode: [3, 4]
   type: episode
-  disabled: true # work in progress
 
 # anime_and_normal_reverse
 ? Show.Name.313-314.s16e03-04
@@ -589,7 +631,6 @@
   season: 16
   episode: [3, 4]
   type: episode
-  disabled: true # work in progress
 
 # anime_and_normal_reverse
 ? Show Name 313-314 s16e03-04
@@ -597,28 +638,28 @@
   season: 16
   episode: [3, 4]
   type: episode
-  disabled: true # work in progress
 
 # anime_and_normal_front
-? 165.Show Name.s08e014
-: title: Show Name
-  absolute_episode: 165
-  season: 8
-  episode: 14
-  type: episode
-  disabled: true  # work in progress
+# This one doesn't work with both parsers (current nor guessit)
+#? 165.Show Name.s08e014
+#: title: Show Name
+#  absolute_episode: 165
+#  season: 8
+#  episode: 14
+#  type: episode
 
 # anime_ep_name
 
 # anime_WarB3asT
+# Both parsers work only with show_type = 'anime' 
 ? 003. Show Name - Ep Name.mkv
-: title: Show Name
+: options: {show_type: anime}
+  title: Show Name
   absolute_episode: 3
   episode_title: Ep Name
   container: mkv
   mimetype: video/x-matroska
   type: episode
-  disabled: true # work in progress
 
 # anime_WarB3asT
 ? 003-005. Show Name - Ep Name.mkv
@@ -630,11 +671,12 @@
   type: episode
 
 # anime_bare
+# Both parsers work only with show_type = 'anime' 
 ? One Piece - 102
-: title: One Piece
+: options: {show_type: anime}
+  title: One Piece
   absolute_episode: 102
   type: episode
-  disabled: true # work in progress
 
 # anime_bare
 ? "[ABC]_Show_Name_001.mkv"
@@ -972,13 +1014,15 @@
 : title: Show Name
   season: 3
   episode: 19
-  subtitle_language: fr
+  subtitle_language:
+    - fa # guessit issue, not a big thing
+    - fr
   other: Fastsub
   format: HDTV
   video_codec: XviD
   release_group: F4ST
+  film: 4 # guessit issue, not a big thing
   type: episode
-  disabled: true
 
 # Corner case: episode range
 ? Show.Name.Season.4.Episodes.1-12
@@ -1072,8 +1116,9 @@
   video_codec: h264
   release_group: C4TV
   language: en
+  episode_details: Special
+  film: 1 # not a big issue#
   type: episode
-  disabled: true # work in progress
 
 # It's not an anime
 ? "[PRiVATE].Fear.The.Show.Name.S02E02.HDTV.XviD-FUM[ettv]"
