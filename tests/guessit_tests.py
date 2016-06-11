@@ -5,6 +5,10 @@ Guessit name parser tests
 import os
 import sys
 
+import datetime
+
+from babelfish.country import Country
+
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 sys.path.insert(1, os.path.realpath(os.path.join(__location__, '../lib')))
@@ -47,12 +51,31 @@ class GuessitTests(unittest.TestCase):
         """
         actual = parser.guess(release_name)
         actual = {k: v for k, v in actual.iteritems()}
+
+        def format(param):
+            if isinstance(param, list):
+                result = []
+                for p in param:
+                    result.append(str(p))
+                return result
+
+            return str(param)
+
         if 'country' in actual:
-            actual['country'] = str(actual['country'])
+            actual['country'] = format(actual['country'])
+        if 'language' in actual:
+            actual['language'] = format(actual['language'])
+        if 'subtitle_language' in actual:
+            actual['subtitle_language'] = format(actual['subtitle_language'])
+
         expected['release_name'] = release_name
         actual['release_name'] = release_name
-        print('Testing {scenario_name}: {release_name}'.format(scenario_name=scenario_name, release_name=release_name))
-        self.assertEqual(expected, actual)
+
+        if expected.get('disabled'):
+            print('Skipping {scenario}: {release_name}'.format(scenario=scenario_name, release_name=release_name))
+        else:
+            print('Testing {scenario}: {release_name}'.format(scenario=scenario_name, release_name=release_name))
+            self.assertEqual(expected, actual)
 
     # for debugging purposes
     #def dump(self, scenario_name, release_name, values):

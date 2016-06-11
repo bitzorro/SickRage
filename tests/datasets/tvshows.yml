@@ -178,12 +178,13 @@
 # stupid
 # TO FIX: current parser doesn't return series_name
 #         guessit parser cannot parse this correctly
-#? tpz-abc102
-#: title: abc
-#  season: 1
-#  episode: 2
-#  release_group: tpz
-#  type: episode
+? tpz-abc102
+: title: abc
+  season: 1
+  episode: 2
+  release_group: tpz
+  type: episode
+  disabled: true # to be fixed
 
 # verbose
 ? Show Name Season 1 Episode 2 Ep Name
@@ -228,8 +229,421 @@
   episode_title: Test
   type: episode
 
-# TODO: add all regexes from regexes.py
+# no_season_general
+? Show.Name.Part.3.HDTV.720p.x264-Group
+: title: Show Name
+  episode: 3
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
+  release_group: Group
+  type: episode
 
+# no_season_general
+? Show.Name.Part.1.and.Part.2.HDTV.720p.x264-Group
+: title: Show Name
+  episode: [1, 2]
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
+  release_group: Group
+  type: episode
+  disabled: true # work in progress
+
+# bare
+? Show.Name.102.HDTV.720p.x264-Group
+: title: Show Name
+  season: 1
+  episode: 2
+  format: HDTV
+  screen_size: 720p
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# no_season
+? Show Name - 01 - Ep Name
+: title: Show Name
+  episode: 1
+  episode_title: Ep Name
+  type: episode
+  disabled: true # work in progress
+
+# no_season
+# TODO: current parser splits folders and files, but guessit does it altogether.
+? 01 - Ep Name
+: episode: 1
+  episode_title: Ep Name
+  type: episode
+  disabled: true # Disabling this test until a real scenario appears
+
+# anime_horriblesubs
+? "[HorribleSubs] Show Name - 01 [720p]"
+: title: Show Name
+  absolute_episode: 1
+  screen_size: 720p
+  release_group: HorribleSubs
+  type: episode
+
+# anime_ultimate
+
+# anime_french_fansub
+? "[SomeGroup-Fansub]_Show_Name_727_[VOSTFR][HD_1280x720]"
+: title: Show Name
+  absolute_episode: 727
+  release_group: SomeGroup
+  screen_size: 720p
+  subtitle_language: fr
+  other: HD
+  type: episode
+
+# anime_french_fansub
+? "[SomeGroup-Fansub]_Show_Name_269_[VOSTFR]_[720p]_[1921E00C]"
+: title: Show Name
+  absolute_episode: 269
+  screen_size: 720p
+  subtitle_language: fr
+  crc32: 1921E00C
+  release_group: SomeGroup
+  type: episode
+
+# anime_french_fansub
+? "[GROUP]Show_Name_726_[VOSTFR]_[V1]_[8bit]_[720p]_[2F7B3FA2]"
+: title: Show Name
+  absolute_episode: 726
+  screen_size: 720p
+  subtitle_language: fr
+  crc32: 2F7B3FA2
+  release_group: GROUP
+  version: 1
+  video_profile: 8bit
+  type: episode
+
+# anime_french_fansub
+? Show Name 445 VOSTFR par Fansub-Resistance (1280*720) - version MQ
+: title: Show Name
+  absolute_episode: 445
+  screen_size: 720p
+  subtitle_language: fr
+  release_group: Resistance
+  type: episode
+  disabled: true # work in progress
+
+# anime_french_fansub
+? Show Name Super 015 VOSTFR par Fansub-Resistance (1280x720) - HQ version
+: title: Show Name Super
+  absolute_episode: 15
+  subtitle_language: fr
+  screen_size: 720p
+  release_group: Resistance
+  other: HQ
+  type: episode
+  disabled: true # work in progress
+
+# anime_french_fansub
+? "[Z-Team][DBSuper.pw] Show Name Super - 028 (VOSTFR)(720p AAC)(MP4)"
+: title: Show Name Super
+  absolute_episode: 28
+  subtitle_language: fr
+  screen_size: 720p
+  release_group: Z-Team
+  audio_codec: AAC
+  container: MP4
+  type: episode
+  disabled: true # work in progress
+
+# anime_french_fansub
+? "[SnF] Show Name - 24 VOSTFR [720p][41761A60]"
+: title: Show Name
+  absolute_episode: 24
+  subtitle_language: fr
+  screen_size: 720p
+  release_group: SnF
+  crc32: 41761A60
+  type: episode
+
+# anime_french_fansub
+? "[Y-F] Very long Show Name Here - 03 Vostfr HD 8bits"
+: title: Very long Show Name Here
+  absolute_episode: 3
+  subtitle_language: fr
+  release_group: Y-F
+  other: HD
+  type: episode
+
+# anime_french_fansub
+? Show Name Online 2 - The Show 04 vostfr FHD
+: title: Show Name Online 2 The Show
+  absolute_episode: 4
+  subtitle_language: fr
+  type: episode
+
+# anime_french_fansub
+? Show Name 804 vostfr HD
+: title: Show Name
+  absolute_episode: 804
+  subtitle_language: fr
+  other: HD
+  type: episode
+  disabled: true # work in progress
+
+# anime_french_fansub
+? Show Name 04 vostfr [1080p]
+: title: Show Name
+  absolute_episode: 4
+  subtitle_language: fr
+  screen_size: 1080p
+  type: episode
+
+# anime_french_fansub
+? Show Name 04 vostfr [720p]
+: title: Show Name
+  absolute_episode: 4
+  subtitle_language: fr
+  screen_size: 720p
+  type: episode
+
+# anime_standard
+? "[Group Name] Show Name.13-16"
+: title: Show Name
+  absolute_episode: [13, 14, 15, 16]
+  release_group: Group Name
+  type: episode
+
+# anime_standard
+? "[Group Name] Show Name - 13-16"
+: title: Show Name
+  absolute_episode: [13, 14, 15, 16]
+  release_group: Group Name
+  type: episode
+
+# anime_standard
+? Show Name 13-16
+: title: Show Name
+  absolute_episode: [13, 14, 15, 16]
+  type: episode
+
+# anime_standard
+? Show Name.13
+: title: Show Name
+  absolute_episode: 13
+  type: episode
+
+# anime_standard
+? Show Name - 13
+: title: Show Name
+  absolute_episode: 13
+  type: episode
+
+# anime_standard
+? Show Name 13
+: title: Show Name
+  absolute_episode: 13
+  type: episode
+
+# anime_standard_round
+? "[Group-Subs]_Show_Name_-_12_(1280x720_H.264_AAC)_[379759DB]"
+: title: Show Name
+  absolute_episode: 12
+  screen_size: 720p
+  video_codec: h264
+  audio_codec: AAC
+  crc32: 379759DB
+  release_group: Group
+  type: episode
+
+# anime_standard_round
+? "[SomeGroup-Subs] Show Name - 02-03 (CX 1280x720 x264 AAC)"
+: title: Show Name
+  absolute_episode: [2, 3]
+  screen_size: 720p
+  video_codec: h264
+  audio_codec: AAC
+  release_group: SomeGroup
+  type: episode
+
+# anime_slash
+? "[AAA] Show Name 312v1 [720p/MKV]"
+: title: Show Name
+  absolute_episode: 312
+  version: 1
+  screen_size: 720p
+  container: MKV
+  release_group: AAA
+  type: episode
+
+# anime_standard_codec
+? "[SomeOne]_Show_Name_-_IS_-_07_[H264][720p][EB7838FC]"
+: title: Show Name
+  episode_title: IS # Probably this is not correct, but it doesn't hurt
+  absolute_episode: 7
+  screen_size: 720p
+  video_codec: h264
+  crc32: EB7838FC
+  release_group: SomeOne
+  type: episode
+
+# anime_standard_codec
+? "[SomeOne]_Show_Name_-_IS_-_07v2_[H264][720p][EB7838FC]"
+: title: Show Name
+  episode_title: IS # Probably this is not correct, but it doesn't hurt
+  absolute_episode: 7
+  screen_size: 720p
+  video_codec: h264
+  crc32: EB7838FC
+  version: 2
+  release_group: SomeOne
+  type: episode
+
+# anime_standard_codec
+? "[SomeOne]_Show_Name_-_IS_-_07v2_[H264][720p][EB7838FC]"
+: title: Show Name
+  episode_title: IS # Probably this is not correct, but it doesn't hurt
+  absolute_episode: 7
+  screen_size: 720p
+  video_codec: h264
+  crc32: EB7838FC
+  version: 2
+  release_group: SomeOne
+  type: episode
+
+# anime_standard_codec
+? "[Group-Shikkaku] A Very Long Show Name Here - 10 [LQ][h264][720p] [8853B21C]"
+: title: A Very Long Show Name Here
+  absolute_episode: 10
+  video_codec: h264
+  screen_size: 720p
+  crc32: 8853B21C
+  release_group: Group-Shikkaku
+  type: episode
+
+# anime_codec_crc
+
+# anime_SxxExx (all examples are like the standard)
+# Show.Name.S01E02.Source.Quality.Etc-Group
+# Show Name - S01E02 - My Ep Name
+# Show.Name.S01.E03.My.Ep.Name
+# Show.Name.S01E02E03.Source.Quality.Etc-Group
+# Show Name - S01E02-03 - My Ep Name
+# Show.Name.S01.E02.E03
+
+# anime_and_normal
+? Show Name - s16e03-04 - 313-314
+: title: Show Name
+  season: 16
+  episode: [3, 4]
+  episode_title: 313-314 # work in progress
+  type: episode
+
+# anime_and_normal
+? Show.Name.s16e03-04.313-314
+: title: Show Name
+  season: 16
+  episode: [3, 4]
+  episode_title: 313-314 # work in progress
+  type: episode
+
+# anime_and_normal
+? Show Name s16e03-04 313-314
+: title: Show Name
+  season: 16
+  episode: [3, 4]
+  episode_title: 313-314 # work in progress
+  type: episode
+
+# anime_and_normal_x
+? Show Name - 16x03-04 - 313-314
+: title: Show Name
+  season: 16
+  episode: [3, 4]
+  episode_title: 313-314 # work in progress
+  type: episode
+
+# anime_and_normal_x
+? Show.Name.16x03-04.313-314
+: title: Show Name
+  season: 16
+  episode: [3, 4]
+  episode_title: 313-314 # work in progress
+  type: episode
+
+# anime_and_normal_x
+? Show Name 16x03-04 313-314
+: title: Show Name
+  season: 16
+  episode: [3, 4]
+  episode_title: 313-314 # work in progress
+  type: episode
+
+# anime_and_normal_reverse
+? Show Name - 313-314 - s16e03-04
+: title: Show Name
+  season: 16
+  episode: [3, 4]
+  type: episode
+  disabled: true # work in progress
+
+# anime_and_normal_reverse
+? Show.Name.313-314.s16e03-04
+: title: Show Name
+  season: 16
+  episode: [3, 4]
+  type: episode
+  disabled: true # work in progress
+
+# anime_and_normal_reverse
+? Show Name 313-314 s16e03-04
+: title: Show Name
+  season: 16
+  episode: [3, 4]
+  type: episode
+  disabled: true # work in progress
+
+# anime_and_normal_front
+? 165.Show Name.s08e014
+: title: Show Name
+  absolute_episode: 165
+  season: 8
+  episode: 14
+  type: episode
+  disabled: true  # work in progress
+
+# anime_ep_name
+
+# anime_WarB3asT
+? 003. Show Name - Ep Name.mkv
+: title: Show Name
+  absolute_episode: 3
+  episode_title: Ep Name
+  container: mkv
+  mimetype: video/x-matroska
+  type: episode
+  disabled: true # work in progress
+
+# anime_WarB3asT
+? 003-005. Show Name - Ep Name.mkv
+: title: Show Name
+  absolute_episode: [3, 4, 5]
+  episode_title: Ep Name
+  container: mkv
+  mimetype: video/x-matroska
+  type: episode
+
+# anime_bare
+? One Piece - 102
+: title: One Piece
+  absolute_episode: 102
+  type: episode
+  disabled: true # work in progress
+
+# anime_bare
+? "[ABC]_Show_Name_001.mkv"
+: title: Show Name
+  absolute_episode: 1
+  container: mkv
+  mimetype: video/x-matroska
+  release_group: ABC
+  type: episode
 
 # ExpectedTitlePostProcessor
 ? Show.Net.S01E06.720p
@@ -239,7 +653,7 @@
   screen_size: 720p
   type: episode
 
-# CreateExtendedTitle
+# CreateExtendedTitleWithCountryOrYear
 ? Show.Name.US.S03.720p.BluRay.x264-SuperGroup
 : title: Show Name
   extended_title: Show Name US
@@ -442,20 +856,16 @@
   type: episode
 
 # https://github.com/guessit-io/guessit/issues/304
-#? Show.season_1-10.(DVDrip)
-#: title: Show
-#  season: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-#  format: DVD
-#  type: episode
+? Show.season_1-10.(DVDrip)
+: title: Show
+  season: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  format: DVD
+  type: episode
 
-
-# film_title problem
+# FixWrongTitleDueToFilmTitle
 # https://github.com/guessit-io/guessit/issues/294
-# TODO: Remove file_title and film when this bug is fixed
 ? Show.Name.S03E16.1080p.WEB-DL.DD5.1.H.264-GOLF68
-#: title: Show Name
-: film_title: Show Name
-  film: 68
+: title: Show Name
   season: 3
   episode: 16
   screen_size: 1080p
@@ -465,3 +875,213 @@
   video_codec: h264
   release_group: GOLF68
   type: episode
+
+# FixWrongTitleDueToFilmTitle
+# https://github.com/guessit-io/guessit/issues/294
+? Show.Name.S02E04.WEBRip.x264-NF69-={TRASH}=-
+: title: Show Name
+  season: 2 
+  episode: 4
+  format: WEBRip
+  video_codec: h264
+  release_group: NF69 
+  type: episode
+
+# Corner case with absolute numbering
+? "[SuperGroup].Show.Name.-.462.[1080p]"
+: title: Show Name
+  absolute_episode: 462
+  screen_size: 1080p
+  release_group: SuperGroup
+  type: episode
+
+# Corner case with absolute numbering and conflict on 720p
+? "[SuperGroup].Show.Name.-.06.[720.Hi10p][1F5578AC]"
+: title: Show Name
+  absolute_episode: 6
+  screen_size: 720p
+  video_profile: 10bit
+  crc32: 1F5578AC
+  release_group: SuperGroup
+  type: episode
+
+# Corner case when episode conflicts with 720p
+? Show.Name.S11E11.DKsubs720p.HDTV.X264-GROUP
+: title: Show
+  season: 11
+  episode: 11
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+  disabled: true # to be fixed
+
+# Corner case with 2 seasons
+? Show.Name.Season.1.2.HDTV.XviD-GoodGroup[SomeTrash]
+: title: Show Name
+  season: [1, 2]
+  format: HDTV
+  video_codec: XviD
+  release_group: GoodGroup
+  type: episode
+  disabled: true # to be fixed
+
+# Corner case with only date and 720p
+? The.Show.Name.2016.05.18.720.HDTV.x264-GROUP.VTV
+: title: The Show Name
+  date: 2016-05-18
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+  disabled: true # to be fixed
+
+# Corner case with season range using to
+? Show.Name.-.Season.1.to.3.-.Mp4.1080p
+: title: Show Name
+  season: [1, 2, 3]
+  container: MP4
+  screen_size: 1080p
+  type: episode
+  disabled: true # to be fixed
+
+# CreateExtendedTitleWithAlternativeTitles
+? "[SuperGroup].Show.Name.-.Still+Name.-.11.[1080p]"
+: title: Show Name
+  alternative_title: [Still, Name]
+  extended_title: "Show Name - Still+Name"
+  absolute_episode: 11
+  screen_size: 1080p
+  release_group: SuperGroup
+  type: episode
+
+# FixAnimeTitlesContainsNumber
+? "[Group].Show.Name.2.The.Big.Show.-.11.[1080p]"
+: title: Show Name 2 The Big Show
+  absolute_episode: 11
+  screen_size: 1080p
+  release_group: Group
+  type: episode
+
+
+# Problem with group F4ST
+# https://github.com/guessit-io/guessit/issues/294
+? Show.Name.S03E19.FASTSUB.VOSTFR.HDTV.XviD-F4ST
+: title: Show Name
+  season: 3
+  episode: 19
+  subtitle_language: fr
+  other: Fastsub
+  format: HDTV
+  video_codec: XviD
+  release_group: F4ST
+  type: episode
+  disabled: true
+
+# Corner case: episode range
+? Show.Name.Season.4.Episodes.1-12
+: title: Show Name
+  season: 4
+  episode: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  type: episode
+
+# Just to make sure episode 0 is not ignored
+? Show.Name.S01E00.Episode.Name.720p.HDTV.x264-BCDE
+: title: Show Name
+  season: 1
+  episode: 0
+  episode_title: Episode Name
+  screen_size: 720p
+  video_codec: h264
+  format: HDTV
+  release_group: BCDE
+  type: episode
+
+# Corner case: NLtoppers4ALL
+# https://github.com/guessit-io/guessit/issues/303
+? Show.Name.s01-E12.(2014).XViD.DD5.1.NLSubs.NLtoppers4ALL
+: title: Show Name
+  season: 1
+  episode: 12
+  year: 2014
+  video_codec: XviD
+  audio_codec: DolbyDigital
+  audio_channels: '5.1'
+  release_group: NLtoppers4ALL
+  type: episode
+  disabled: true
+
+# Corner Case: Episode range
+? Show.Name.Season.4.Episodes.1-12
+: title: Show Name
+  season: 4
+  episode: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  type: episode
+
+# Corner Case: Implicit season range
+? Show.Name.1-3.-.LostFilm.TV
+: title: Show Name
+  season: [1, 2, 3]
+  release_group: LostFilm.TV
+  type: episode
+  disabled: true # work in progress
+
+# Corner Case: Episode 2 with a number after it
+? "[GroupName].Show.Name.-.02.5.(Special).[BD.1080p]"
+: title: Show Name
+  absolute_episode: 2
+  episode_details: Special
+  screen_size: 1080p
+  format: BluRay
+  release_group: GroupName
+  type: episode
+  disabled: true # work in progress
+
+# FixAnimeReleaseGroup
+# Corner Case: Anime with absolute numbering and two possible release groups
+? "[AnimeRG].Show.Name.-.462.[720p].[10bit].[JRR].[Shippuden]"
+: title: Show Name
+  absolute_episode: 462
+  screen_size: 720p
+  video_profile: 10bit
+  release_group: AnimeRG
+  type: episode
+
+# Corner Case: Additional implicit episode
+? Show.Name.S03E21.22.FASTSUB.VOSTFR.HDTV.XviD.GROUP
+: title: Show Name
+  season: 3
+  episode: [21, 22]
+  subtitle_language: fr
+  format: HDTV
+  video_codec: XviD
+  other: Fastsub
+  release_group: GROUP
+  type: episode
+  disabled: true # work in progress
+
+# Formula 1 tv show
+? Show.Name.S02E05.F1.Special.720p.HDTV.x264-C4TV.English
+: title: Show Name
+  season: 2
+  episode: 5
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  release_group: C4TV
+  language: en
+  type: episode
+  disabled: true # work in progress
+
+# It's not an anime
+? "[PRiVATE].Fear.The.Show.Name.S02E02.HDTV.XviD-FUM[ettv]"
+: title: Fear The Show Name
+  season: 2
+  episode: 2
+  format: HDTV
+  video_codec: XviD
+  release_group: FUM
+  type: episode
+

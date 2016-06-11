@@ -376,9 +376,9 @@ class CreateExtendedTitleWithCountryOrYear(Rule):
                 return extended_title
 
 
-class FixAnimeTitlesContainsNumber(Rule):
+class FixTitlesContainsNumber(Rule):
     """
-    There are animes where the title contains a number and the part after the number is incorrectly detected as
+    There are shows where the title contains a number and the part after the number is incorrectly detected as
     episode title.
 
     e.g.: [Group].Show.Name.2.The.Big.Show.-.11.[1080p]
@@ -418,26 +418,23 @@ class FixAnimeTitlesContainsNumber(Rule):
         :type context: dict
         :return:
         """
-        # Only if it's anime...
-        if context.get('show_type') != 'regular' and matches.tagged('anime'):
-            title = matches.named('title', index=0)
-            # and there's a title...
-            if title:
-                episode_title = matches.next(title, index=0)
-                # and after the title there's an episode_title match...
-                if episode_title and episode_title.name == 'episode_title':
-                    holes = matches.holes(start=title.end, end=episode_title.start)
-                    # and between the title and episode_title, there's one hole...
-                    if len(holes) == 1:
-                        number = holes[0]
-                        if number.raw.isdigit():
-                            # join all three matches into one new title
-                            new_title = copy.copy(title)
-                            new_title.value = ' '.join([new_title.value, number.value, episode_title.value])
-                            new_title.end = episode_title.end
+        title = matches.named('title', index=0)
+        # and there's a title...
+        if title:
+            episode_title = matches.next(title, index=0)
+            # and after the title there's an episode_title match...
+            if episode_title and episode_title.name == 'episode_title':
+                holes = matches.holes(start=title.end, end=episode_title.start)
+                number = holes[0] if len(holes) == 1 else None
+                # and between the title and episode_title, there's one hole...
+                if number and number.raw.isdigit():
+                    # join all three matches into one new title
+                    new_title = copy.copy(title)
+                    new_title.value = ' '.join([new_title.value, number.value, episode_title.value])
+                    new_title.end = episode_title.end
 
-                            # remove the old title and episode title; and append the new title
-                            return [title, episode_title], [new_title]
+                    # remove the old title and episode title; and append the new title
+                    return [title, episode_title], [new_title]
 
 
 class AnimeWithSeasonAbsoluteEpisodeNumbers(Rule):
@@ -1207,17 +1204,20 @@ class ReleaseGroupPostProcessor(Rule):
         re.compile(r'\W*\bre\-?enc\b\W*', flags=re.IGNORECASE),
 
         # NLSubs-word
-        re.compile(r'\W*\b([A-Z]{2})(subs)\b\W*', flags=re.IGNORECASE),
+        re.compile(r'\W*\b([a-z]{2})(subs)\b\W*', flags=re.IGNORECASE),
 
         # word.rar, word.gz
         re.compile(r'\.((rar)|(gz)|(\d+))$', flags=re.IGNORECASE),
 
-        # WORD.rartv, WORD.ettv
-        re.compile(r'(?<=[A-Z0-9]{3})\.([a-z]+)$', flags=re.IGNORECASE),
+        # word.rartv, word.ettv
+        re.compile(r'(?<=[a-z0-9]{3})\.([a-z]+)$', flags=re.IGNORECASE),
+
+        # word-fansub
+        re.compile(r'(?<=[a-z0-9]{3})\-((fan)?sub(s)?)$', flags=re.IGNORECASE),
 
         # https://github.com/guessit-io/guessit/issues/302
         # INTERNAL
-        re.compile(r'\W*\b((INTERNAL)|(Obfuscated)|(VTV)|(SD)|(AVC))\b\W*', flags=re.IGNORECASE),
+        re.compile(r'\W*\b((internal)|(obfuscated)|(vtv)|(sd)|(avc))\b\W*', flags=re.IGNORECASE),
 
         # ...word
         re.compile(r'^\W+', flags=re.IGNORECASE),
@@ -1278,7 +1278,7 @@ def rules():
         FixSeasonRangeDetection,
         FixEpisodeRangeDetection,
         FixWrongEpisodeDetectionInSeasonRange,
-        FixAnimeTitlesContainsNumber,
+        FixTitlesContainsNumber,
         AnimeWithSeasonAbsoluteEpisodeNumbers,
         AnimeAbsoluteEpisodeNumbers,
         AbsoluteEpisodeNumbers,
