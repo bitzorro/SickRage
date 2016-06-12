@@ -8,6 +8,7 @@ For each rule:
   - Provide an explanation
   - An example of the guessit output without it
   - An example of the guessit output with it
+  - Each rule should handle only one issue
   - Use rule.priority = POST_PROCESSOR (DO NOT change this*)
   - DO NOT use rule.dependency**
   - DO NOT change match.value. Just remove the match and append a new one with the amended value***
@@ -33,7 +34,8 @@ from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
 
 class FixAnimeReleaseGroup(Rule):
     """
-    Anime release groups is always the first if they are at the beginning and inside square brackets
+    Anime release group is at the beginning and inside square brackets. If this pattern is found for a 'hole', use it
+    as a release group
 
     guessit -t episode "[RealGroup].Show.Name.-.462.[720p].[10bit].[SOMEPERSON].[Something]"
 
@@ -49,11 +51,12 @@ class FixAnimeReleaseGroup(Rule):
             "type": "episode"
         }
 
-    with this fix (absolute episode is fixed by another rule):
+    with this fix:
         For: [RealGroup].Show.Name.-.462.[720p].[10bit].[SOMEPERSON].[Something]
         GuessIt found: {
             "title": "Show Name",
-            "absolute_episode": 462,
+            "season": 4,
+            "episode": 62,
             "screen_size": "720p",
             "video_profile": "10bit",
             "release_group": "RealGroup",
@@ -62,6 +65,7 @@ class FixAnimeReleaseGroup(Rule):
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
+    release_group_re = re.compile(r'^\[(?P<release_group>\w+\.?\w+)\]$', flags=re.IGNORECASE)
     blacklist = ('private', 'req', 'no.rar')
 
     def when(self, matches, context):
@@ -74,14 +78,15 @@ class FixAnimeReleaseGroup(Rule):
         """
         title = matches.named('title', index=0)
         # the problem happens when there's no match before the title...
-        if title and not matches.previous(title):
+        if context.get('show_type') != 'regular' and title and not matches.previous(title):
             holes = matches.holes(start=0, end=title.start)
             hole = holes[0] if len(holes) == 1 else None
+            m = self.release_group_re.match(hole.raw) if hole else None
             # ... and there's one hole (the correct release group)
-            if hole and hole.raw[0] == '[' and hole.raw[-1] == ']' and hole.value[1:-1].lower() not in self.blacklist:
+            if m and m.group('release_group').lower() not in self.blacklist:
                 new_release_group = copy.copy(hole)
                 new_release_group.name = 'release_group'
-                new_release_group.value = hole.value[1:-1]
+                new_release_group.value = m.group('release_group')
                 new_release_group.tags.append('anime')
 
                 to_append = new_release_group
@@ -92,6 +97,8 @@ class FixAnimeReleaseGroup(Rule):
 
 class FixScreenSizeConflict(Rule):
     """
+    Certain release names contains a conflicting screen_size (e.g.: 720 without p). It confuses guessit: the guessed
+    season and episode needs to be removed.
 
     e.g.: "[SuperGroup].Show.Name.-.06.[720.Hi10p][1F5578AC]"
 
@@ -128,7 +135,6 @@ class FixScreenSizeConflict(Rule):
     """
     priority = POST_PROCESS
     consequence = RemoveMatch
-    conflict_list = ('season', 'episode')
 
     def when(self, matches, context):
         """
@@ -139,13 +145,14 @@ class FixScreenSizeConflict(Rule):
         :return:
         """
         screen_size = matches.named('screen_size', index=0)
-        return matches.at_match(screen_size, predicate=lambda m: m.name in self.conflict_list) if screen_size else None
+        if screen_size:
+            return matches.at_match(screen_size, predicate=lambda m: m.name in ('season', 'episode'))
 
 
-class FixInvalidAlternativeTitle(Rule):
+class FixInvalidTitleOrAlternativeTitle(Rule):
     """
-    Some release names have season/episode defined twice, and one of them becomes an alternative_title.
-    This fix will remove the invalid alternative_title
+    Some release names have season/episode defined twice, and one of them becomes an alternative_title or a suffix
+    in the title. This fix will remove the invalid alternative_title or the invalid title's suffix
 
     e.g.: "Show Name - 313-314 - s16e03-04"
 
@@ -176,8 +183,6 @@ class FixInvalidAlternativeTitle(Rule):
             ],
             "type": "episode"
         }
-
-
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
@@ -467,12 +472,12 @@ class FixTitlesContainsNumber(Rule):
         }
 
 
-    with this fix (small note, absolute is handled by a different rule):
+    with this fix:
         For: [Group].Show.Name.2.The.Big.Show.-.11.[1080p]
         GuessIt found: {
             "release_group": "Group",
             "title": "Show Name 2 The Big Show",
-            "absolute_episode": 11,
+            "episode": 11,
             "screen_size": "1080p",
             "type": "episode"
         }
@@ -584,9 +589,9 @@ class AnimeWithSeasonAbsoluteEpisodeNumbers(Rule):
 
 class AnimeAbsoluteEpisodeNumbers(Rule):
     """
-    Medusa rule: If it's an anime, use absolute episode numbers
+    Medusa rule: If it's an anime, prefer absolute episode numbers
 
-    e.g.: [Group].Show.Name.S2.-.19.[1080p]
+    e.g.: [Group].Show.Name.-.102.[720p]
 
     guessit -t episode "[Group].Show.Name.-.102.[720p]"
 
@@ -641,9 +646,9 @@ class AnimeAbsoluteEpisodeNumbers(Rule):
 
 class AbsoluteEpisodeNumbers(Rule):
     """
-    Medusa absolute episode numbers rule
+    Medusa absolute episode numbers rule. For animes without season, prefer absolute numbers.
 
-    e.g.: [Group].Show.Name.S2.-.19.[1080p]
+    e.g.: Show.Name.10.720p
 
     guessit -t episode "Show.Name.10.720p"
 
@@ -980,7 +985,7 @@ class FixSeasonRangeDetection(Rule):
         }
     """
     priority = POST_PROCESS
-    consequence = AppendMatch
+    consequence = [RemoveMatch, AppendMatch]
     range_separator = ('-', '-s', '.to.s')
 
     def when(self, matches, context):
@@ -1000,14 +1005,18 @@ class FixSeasonRangeDetection(Rule):
             season_separator = matches.input_string[start_season.end:end_season.start]
             # and they are separated by a 'range separator'
             if season_separator.lower() in self.range_separator:
+                wrong_episode_title = matches.next(start_season,
+                                                   predicate=lambda m: m
+                                                   if m.name == 'episode_title' and m.value.lower() == 'to' else False)
                 to_append = []
+                to_remove = wrong_episode_title
                 # then create the missing numbers
                 for i in range(start_season.value + 1, end_season.value):
                     new_season = copy.copy(start_season)
                     new_season.value = i
                     to_append.append(new_season)
 
-                return to_append
+                return to_remove, to_append
 
 
 class FixEpisodeRangeDetection(Rule):
@@ -1198,19 +1207,18 @@ class ExpectedTitlePostProcessor(Rule):
         :return:
         """
         # All titles that matches because of a expected title was tagged as 'expected'
-        titles = matches.tagged('expected')
+        # and title.value is not in the expected list, it's a regex
+        titles = matches.tagged('expected', predicate=lambda m: m.value not in context.get('expected_title'))
 
         to_remove = []
         to_append = []
 
         for title in titles:
-            # If title.value is not in the expected list, it's a regex
-            if title.value not in context.get('expected_title'):
-                # Remove all dots from the title
-                new_title = copy.copy(title)  # IMPORTANT - never change the value. Better to remove and add it
-                new_title.value = title.value.replace('.', ' ')  # TODO: improve this
-                to_remove.append(title)
-                to_append.append(new_title)
+            # Remove all dots from the title
+            new_title = copy.copy(title)  # IMPORTANT - never change the value. Better to remove and add it
+            new_title.value = title.value.replace('.', ' ')  # TODO: improve this
+            to_remove.append(title)
+            to_append.append(new_title)
 
         return to_remove, to_append
 
@@ -1337,7 +1345,7 @@ def rules():
     """
     return Rebulk().rules(
         FixAnimeReleaseGroup,
-        FixInvalidAlternativeTitle,
+        FixInvalidTitleOrAlternativeTitle,
         FixScreenSizeConflict,
         FixWrongTitleDueToFilmTitle,
         FixSeasonNotDetected,
