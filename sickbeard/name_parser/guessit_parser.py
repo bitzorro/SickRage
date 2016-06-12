@@ -31,7 +31,7 @@ class GuessitNameParser(object):
         # guessit confuses Pan with language Panjabi
         r're:\bPan de Peace\b!',
 
-        # TODO: needs investigation...
+        # guessit gives: "subtitle_language": "Oromo"  and it skips the title
         r're:^Storm Chasers\b',
     }
 

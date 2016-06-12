@@ -735,6 +735,214 @@
   screen_size: 720p
   type: episode
 
+# ExpectedTitlePostProcessor
+? 11.22.63.106.hdtv-abc
+: title: 11.22.63
+  season: 1
+  episode: 6
+  format: HDTV
+  release_group: abc
+  type: episode
+
+# expected_title
+? 12.monkeys.Season.1.Complete
+: title: 12 monkeys
+  season: 1
+  other: Complete
+  type: episode
+
+# expected_title
+? The.100.Season.1.Complete
+: title: The 100
+  season: 1
+  other: Complete
+  type: episode
+
+# expected_title
+? Storm.Chasers.Season.1
+: title: Storm Chasers
+  season: 1
+  type: episode
+
+# expected_title
+? 60.Minutes.-.2008.01.06
+: title: 60 Minutes
+  date: 2008-01-06
+  type: episode
+
+# expected_title
+? Star.Trek.DS9.S01E03
+: title: Star Trek DS9
+  season: 1
+  episode: 3
+  type: episode
+
+# expected_title
+? "[Group].Pan.de.Peace!.-.08.[1080p]"
+: title: Pan de Peace!
+  absolute_episode: 8
+  screen_size: 1080p
+  release_group: Group
+  type: episode
+
+# expected_group
+? Show.Name.x264-byEMP
+: title: Show Name
+  video_codec: h264
+  release_group: byEMP
+  type: episode
+
+# expected_group
+? Show.Name.x264-ELITETORRENT
+: title: Show Name
+  video_codec: h264
+  release_group: ELITETORRENT
+  type: episode
+
+# expected_group
+? Show.Name.x264-F4ST3R
+: title: Show Name
+  video_codec: h264
+  release_group: F4ST3R
+  film: 4 # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-F4ST
+: title: Show Name
+  video_codec: h264
+  release_group: F4ST
+  film: 4 # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-JIVE
+: title: Show Name
+  video_codec: h264
+  release_group: JIVE
+  type: episode
+
+# expected_group
+? Show.Name.x264-NovaRip
+: title: Show Name
+  video_codec: h264
+  release_group: NovaRip
+  type: episode
+
+# expected_group
+? Show.Name.x264-PARTiCLE
+: title: Show Name
+  video_codec: h264
+  release_group: PARTiCLE
+  type: episode
+
+# expected_group
+? Show.Name.x264-POURMOi
+: title: Show Name
+  video_codec: h264
+  release_group: POURMOi
+  type: episode
+
+# expected_group
+? Show.Name.x264-RipPourBox
+: title: Show Name
+  video_codec: h264
+  release_group: RipPourBox
+  type: episode
+
+# expected_group
+? Show.Name.x264-RiPRG
+: title: Show Name
+  video_codec: h264
+  release_group: RiPRG
+  type: episode
+
+# expected_group
+? Show.Name.x264-TV2LAX9
+: title: Show Name
+  video_codec: h264
+  release_group: TV2LAX9
+  bonus: 9 # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-AF
+: title: Show Name
+  video_codec: h264
+  release_group: AF
+  language: af # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-AR
+: title: Show Name
+  video_codec: h264
+  release_group: AR
+  language: ar # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-CS
+: title: Show Name
+  video_codec: h264
+  release_group: CS
+  language: cs # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-DR
+: title: Show Name
+  video_codec: h264
+  release_group: DR
+  type: episode
+
+# expected_group
+? Show.Name.x264-MC
+: title: Show Name
+  video_codec: h264
+  release_group: MC
+  country: MC # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-NA
+: title: Show Name
+  video_codec: h264
+  release_group: NA
+  language: na # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-NL
+: title: Show Name
+  video_codec: h264
+  release_group: NL
+  language: nl # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-TL
+: title: Show Name
+  video_codec: h264
+  release_group: TL
+  language: tl # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-YT
+: title: Show Name
+  video_codec: h264
+  release_group: YT
+  country: YT # not a big issue
+  type: episode
+
+# expected_group
+? Show.Name.x264-ZT
+: title: Show Name
+  video_codec: h264
+  release_group: ZT
+  type: episode
+
 # CreateExtendedTitleWithCountryOrYear (Country)
 ? Show.Name.US.S03.720p.BluRay.x264-SuperGroup
 : title: Show Name
@@ -1417,10 +1625,10 @@
   episode: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
   type: episode
 
-# Corner Case: Implicit season range
+# Corner Case: Implicit episode range
 ? Show.Name.1-3.-.LostFilm.TV
 : title: Show Name
-  season: [1, 2, 3]
+  episode: [1, 2, 3]
   release_group: LostFilm.TV
   type: episode
   disabled: true # work in progress
@@ -1434,7 +1642,6 @@
   format: BluRay
   release_group: GroupName
   type: episode
-  disabled: true # work in progress
 
 # FixAnimeReleaseGroup
 # Corner Case: Anime with absolute numbering and two possible release groups
@@ -1492,7 +1699,9 @@
 : title: Show Name
   season: 3
   episode: [21, 22]
-  subtitle_language: fr
+  subtitle_language: 
+    - fa # not a big issue now
+    - fr
   format: HDTV
   video_codec: XviD
   other: Fastsub
@@ -1594,3 +1803,17 @@
   language: es
   release_group: NEWPCT
   type: episode
+
+# SpanishNewpctReleaseName - season and episode:
+? Show.Name.-.Tem.1.720p.HDTV.x264[Cap.112_114.Final]SPANISH.AUDIO-NEWPCT
+: title: Show Name
+  season: 1
+  episode: [12, 13, 14]
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  language: es
+  release_group: NEWPCT
+  other: FINAL
+  type: episode
+

@@ -140,9 +140,8 @@ class SpanishNewpctReleaseName(Rule):
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
     season_words = ('temporada', 'temp', 'tem')
-    sample = '[Cap.1408_1409]'
     episode_re = re.compile(r'^\[cap\.(?P<season>\d{1,2})(?P<episode>\d{2})'
-                            r'(_((?P<end_season>\d{1,2})(?P<end_episode>\d{2})))?\]', flags=re.IGNORECASE)
+                            r'(_((?P<end_season>\d{1,2})(?P<end_episode>\d{2})))?.*\]', flags=re.IGNORECASE)
 
     def when(self, matches, context):
         """
@@ -159,7 +158,7 @@ class SpanishNewpctReleaseName(Rule):
             season = matches.named('season', index=0)
             # and the first hole before the correct matched season should be the word episode (cap) in spanish
             hole = matches.holes(end=season.start, index=-1) if season else None
-            string = matches.input_string[hole.start:hole.start+len(self.sample)] if hole else None
+            string = matches.input_string[hole.start:] if hole else None
             # then search the season and episode numbers: [Cap.102_103]
             m = self.episode_re.search(string) if string else None
             g = m.groupdict() if m else None
@@ -786,7 +785,7 @@ class AbsoluteEpisodeNumbers(Rule):
 
     """
     priority = POST_PROCESS
-    consequence = RenameMatch('absolute_episode')
+    consequence = [RemoveMatch, RenameMatch('absolute_episode')]
     non_words_re = re.compile(r'\W')
     episode_words = ('e', 'episode', 'ep')
 
@@ -801,6 +800,7 @@ class AbsoluteEpisodeNumbers(Rule):
         # if it seems to be anime and it doesn't have season
         if context.get('show_type') != 'regular' and not matches.named('season'):
             episodes = matches.named('episode')
+            to_remove = []
             to_rename = []
             for episode in episodes:
                 # And there's no episode count
@@ -810,18 +810,24 @@ class AbsoluteEpisodeNumbers(Rule):
                     return
 
                 previous = matches.previous(episode, index=-1)
-                # And it's not part of an episode range (previous is not an episode)
-                if previous and previous.name != 'episode':
+                if previous:
                     hole = matches.holes(start=previous.end, end=episode.start, index=0)
                     # and the hole is not an 'episode' word (e.g.: e, ep, episode)
-                    if hole and self.non_words_re.sub('', hole.value).lower() in self.episode_words:
-                        # Some.Show.E07.1080p.HDTV.x265-GROUP
-                        # Some.Show.Episode.10.Some.Title.720p
-                        # not absolute episode
-                        return
+                    if previous.name != 'episode':
+                        if hole and self.non_words_re.sub('', hole.value).lower() in self.episode_words:
+                            # Some.Show.E07.1080p.HDTV.x265-GROUP
+                            # Some.Show.Episode.10.Some.Title.720p
+                            # not absolute episode
+                            return
+                    elif hole and hole.value == '.':
+                        # [GroupName].Show.Name.-.02.5.(Special).[BD.1080p]
+                        # 5 is not absolute, and not an episode BTW
+                        to_remove.append(episode)
+                        continue
+
                 to_rename.append(episode)
 
-            return to_rename
+            return to_remove, to_rename
 
 
 class PartsAsEpisodeNumbers(Rule):
