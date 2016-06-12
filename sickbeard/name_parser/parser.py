@@ -22,7 +22,6 @@ import os
 import time
 import re
 import os.path
-
 import sickbeard
 from sickbeard.name_parser import regexes
 
@@ -50,6 +49,7 @@ class NameParser(object):
         self.file_name = file_name
         self.showObj = showObj
         self.tryIndexers = tryIndexers
+
         self.naming_pattern = naming_pattern
         self.use_guessit = use_guessit
 
