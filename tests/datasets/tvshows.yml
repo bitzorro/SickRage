@@ -413,7 +413,7 @@
   other: HD
   type: episode
 
-# anime_french_fansub
+# anime_french_fansub (FixTitlesContainsNumber)
 ? Show Name Online 2 - The Show 04 vostfr FHD
 : title: Show Name Online 2 The Show
   absolute_episode: 4
@@ -570,7 +570,7 @@
 # Show Name - S01E02-03 - My Ep Name
 # Show.Name.S01.E02.E03
 
-# anime_and_normal
+# anime_and_normal (FixInvalidTitleOrAlternativeTitle - alternative_title case)
 ? Show Name - s16e03-04 - 313-314
 : title: Show Name
   season: 16
@@ -578,7 +578,7 @@
   episode_title: 313-314 # work in progress
   type: episode
 
-# anime_and_normal
+# anime_and_normal (FixInvalidTitleOrAlternativeTitle - alternative_title case)
 ? Show.Name.s16e03-04.313-314
 : title: Show Name
   season: 16
@@ -586,7 +586,7 @@
   episode_title: 313-314 # work in progress
   type: episode
 
-# anime_and_normal
+# anime_and_normal (FixInvalidTitleOrAlternativeTitle - alternative_title case)
 ? Show Name s16e03-04 313-314
 : title: Show Name
   season: 16
@@ -594,7 +594,7 @@
   episode_title: 313-314 # work in progress
   type: episode
 
-# anime_and_normal_x
+# anime_and_normal_x (FixInvalidTitleOrAlternativeTitle - alternative_title case)
 ? Show Name - 16x03-04 - 313-314
 : title: Show Name
   season: 16
@@ -602,7 +602,7 @@
   episode_title: 313-314 # work in progress
   type: episode
 
-# anime_and_normal_x
+# anime_and_normal_x (FixInvalidTitleOrAlternativeTitle - alternative_title case)
 ? Show.Name.16x03-04.313-314
 : title: Show Name
   season: 16
@@ -610,7 +610,7 @@
   episode_title: 313-314 # work in progress
   type: episode
 
-# anime_and_normal_x
+# anime_and_normal_x (FixInvalidTitleOrAlternativeTitle - alternative_title case)
 ? Show Name 16x03-04 313-314
 : title: Show Name
   season: 16
@@ -618,23 +618,38 @@
   episode_title: 313-314 # work in progress
   type: episode
 
-# anime_and_normal_reverse
+# FixInvalidTitleOrAlternativeTitle - alternative_title case (negative scenario)
+? Show Name 16x03-04 100-10
+: title: Show Name
+  episode_title: 100-10
+  season: 16
+  episode: [3, 4]
+  type: episode
+
+# anime_and_normal_reverse (FixInvalidAlternativeTitle - title case)
 ? Show Name - 313-314 - s16e03-04
 : title: Show Name
   season: 16
   episode: [3, 4]
   type: episode
 
-# anime_and_normal_reverse
+# anime_and_normal_reverse (FixInvalidAlternativeTitle - title case)
 ? Show.Name.313-314.s16e03-04
 : title: Show Name
   season: 16
   episode: [3, 4]
   type: episode
 
-# anime_and_normal_reverse
+# anime_and_normal_reverse (FixInvalidAlternativeTitle - title case)
 ? Show Name 313-314 s16e03-04
 : title: Show Name
+  season: 16
+  episode: [3, 4]
+  type: episode
+
+# FixInvalidAlternativeTitle - title case (negative scenario)
+? Show Name 10-20 s16e03-04
+: title: Show Name 10-20
   season: 16
   episode: [3, 4]
   type: episode
@@ -687,6 +702,26 @@
   release_group: ABC
   type: episode
 
+# FixScreenSizeConflict
+? "[SuperGroup].Show.Name.-.06.[720.Hi10p][1F5578AC]"
+: title: Show Name
+  absolute_episode: 6
+  screen_size: 720p
+  video_profile: 10bit
+  crc32: 1F5578AC
+  release_group: SuperGroup
+  type: episode
+
+# FixScreenSizeConflict
+? "[SuperGroup].Show.Name.-.06.[1080.Hi10p][1F5578AC]"
+: title: Show Name
+  absolute_episode: 6
+  screen_size: 1080p
+  video_profile: 10bit
+  crc32: 1F5578AC
+  release_group: SuperGroup
+  type: episode
+
 # ExpectedTitlePostProcessor
 ? Show.Net.S01E06.720p
 : title: Show Net
@@ -695,11 +730,123 @@
   screen_size: 720p
   type: episode
 
-# CreateExtendedTitleWithCountryOrYear
+# ExpectedTitlePostProcessor
+? 11.22.63.S01E06.720p
+: title: 11.22.63
+  season: 1
+  episode: 6
+  screen_size: 720p
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (Country)
 ? Show.Name.US.S03.720p.BluRay.x264-SuperGroup
 : title: Show Name
   extended_title: Show Name US
   country: US
+  season: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (Country inside brackets)
+? Show.Name.(US).S03.720p.BluRay.x264-SuperGroup
+: title: Show Name
+  extended_title: Show Name US
+  country: US
+  season: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (Country followed by episode)
+? Show.Name.US.E03.720p.BluRay.x264-SuperGroup
+: title: Show Name
+  extended_title: Show Name US
+  country: US
+  episode: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (Country followed by date)
+? Show.Name.US.2012.12.12.720p.BluRay.x264-SuperGroup
+: title: Show Name
+  extended_title: Show Name US
+  country: US
+  date: 2012-12-12
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (Year)
+? Show.Name.2002.S03.720p.BluRay.x264-SuperGroup
+: title: Show Name
+  extended_title: Show Name 2002
+  year: 2002
+  season: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (Year inside brackets)
+? Show.Name.(2002).S03.720p.BluRay.x264-SuperGroup
+: title: Show Name
+  extended_title: Show Name 2002
+  year: 2002
+  season: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (negative country scenario)
+? Show.Name.S03.US.720p.BluRay.x264-SuperGroup
+: title: Show Name
+  country: US
+  season: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (negative country scenario)
+? Show.Name.S03.(US).720p.BluRay.x264-SuperGroup
+: title: Show Name
+  country: US
+  season: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (negative year scenario)
+? Show.Name.S03.2005.720p.BluRay.x264-SuperGroup
+: title: Show Name
+  year: 2005
+  season: 3
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithCountryOrYear (negative year scenario)
+? Show.Name.S03.(2005).720p.BluRay.x264-SuperGroup
+: title: Show Name
+  year: 2005
   season: 3
   screen_size: 720p
   format: BluRay
@@ -715,10 +862,38 @@
   release_group: Group
   type: episode
 
+# AnimeWithSeasonAbsoluteEpisodeNumbers (negative scenario)
+? "[Group].Show.Name.G2.-.19.[1080p]"
+: title: Show Name G2
+  absolute_episode: 19
+  screen_size: 1080p
+  release_group: Group
+  type: episode
+
+# AnimeWithSeasonAbsoluteEpisodeNumbers (options show_type='regular', it disables this rule since it's only for animes)
+? "[Group].Show.Name.S2.-.19.[1080p]"
+: options: {show_type: regular}
+  title: Show Name
+  season: 2
+  episode_title: '19'
+  screen_size: 1080p
+  release_group: Group
+  type: episode
+
 # AnimeAbsoluteEpisodeNumbers
-? "[Group].Show.Name.S2.-.102.[720p]"
-: title: Show Name S2
+? "[Group].Show.Name.-.102.[720p]"
+: title: Show Name
   absolute_episode: 102
+  screen_size: 720p
+  release_group: Group
+  type: episode
+
+# AnimeAbsoluteEpisodeNumbers (options show_type='regular', it disables this rule since it's only for animes)
+? "[Group].Show.Name.-.102.[720p]"
+: options: {show_type: regular}
+  title: Show Name
+  season: 1
+  episode: 2
   screen_size: 720p
   release_group: Group
   type: episode
@@ -727,6 +902,43 @@
 ? Show.Name.10.720p
 : title: Show Name
   absolute_episode: 10
+  screen_size: 720p
+  type: episode
+
+# AbsoluteEpisodeNumbers (options show_type='regular', it disables this rule since it's only for animes)
+? Show.Name.10.720p
+: options: {show_type: regular}
+  title: Show Name
+  episode: 10
+  screen_size: 720p
+  type: episode
+
+# AbsoluteEpisodeNumbers (negative scenario - not absolute number)
+? Some.Show.1of8..Title.x264.AAC.Group
+: title: Some Show
+  episode: 1
+  episode_count: 8
+  episode_title: Title
+  video_codec: h264
+  audio_codec: AAC
+  release_group: Group
+  type: episode
+
+# AbsoluteEpisodeNumbers (negative scenario - not absolute number)
+? Some.Show.E07.1080p.HDTV.x265-GROUP
+: title: Some Show
+  episode: 7
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h265
+  release_group: GROUP
+  type: episode
+
+# AbsoluteEpisodeNumbers (negative scenario - not absolute number)
+? Some.Show.Episode.10.Some.Title.720p
+: title: Some Show
+  episode: 10
+  episode_title: Some Title
   screen_size: 720p
   type: episode
 
@@ -740,6 +952,43 @@
   release_group: Group
   type: episode
 
+# PartsAsEpisodeNumbers (negative scenario - there's season)
+? Show.Name.S02.Some.Name.Part.2.720p.BluRay.x264-Group
+: title: Show Name
+  season: 2
+  episode_title: Some Name
+  part: 2
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# PartsAsEpisodeNumbers (negative scenario - there's episode)
+? Show.Name.E01.Some.Name.Part.2.720p.BluRay.x264-Group
+: title: Show Name
+  episode: 1
+  episode_title: Some Name
+  part: 2
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: Group
+  type: episode
+
+# PartsAsEpisodeNumbers (negative scenario - there are season and episode)
+? Show.Name.S02E01.Some.Name.Part.2.720p.BluRay.x264-Group
+: title: Show Name
+  season: 2
+  episode: 1
+  episode_title: Some Name
+  part: 2
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: Group
+  type: episode
+
 # FixSeasonEpisodeDetection
 ? Some.Show.S02E14.X264.1080p.HDTV
 : title: Some Show
@@ -747,6 +996,25 @@
   episode: 14
   video_codec: h264
   screen_size: 1080p
+  format: HDTV
+  type: episode
+
+# FixSeasonEpisodeDetection (h265)
+? Some.Show.S02E14.X265.1080p.HDTV
+: title: Some Show
+  season: 2
+  episode: 14
+  video_codec: h265
+  screen_size: 1080p
+  format: HDTV
+  type: episode 
+
+# FixSeasonEpisodeDetection (negative scenario: xvid)
+? Some.Show.S02E14.XviD.HDTV
+: title: Some Show
+  season: 2
+  episode: 14
+  video_codec: XviD
   format: HDTV
   type: episode 
 
@@ -773,17 +1041,71 @@
   release_group: BS666
   type: episode
 
+# FixWrongSeasonAndReleaseGroup (ccs3)
+? Show.Name.S06E04.1080i.HDTV.DD5.1.H264.ccs3
+: title: Show Name
+  season: 6
+  episode: 4
+  screen_size: 1080i
+  format: HDTV
+  audio_codec: DolbyDigital
+  audio_channels: '5.1'
+  video_codec: h264
+  release_group: ccs3
+  type: episode
+
+# FixWrongSeasonAndReleaseGroup (qqss44)
+? Show.Name.S06E04.1080i.HDTV.DD5.1.H264.qqss44
+: title: Show Name
+  season: 6
+  episode: 4
+  screen_size: 1080i
+  format: HDTV
+  audio_codec: DolbyDigital
+  audio_channels: '5.1'
+  video_codec: h264
+  release_group: qqss44
+  type: episode
+
 # FixSeasonRangeDetection
 ? show name s01-s04
 : title: show name
   season: [1, 2, 3, 4]
   type: episode
 
+# FixSeasonRangeDetection
+? show name s01-04
+: title: show name
+  season: [1, 2, 3, 4]
+  type: episode
+
+# FixSeasonRangeDetection
+? show name s01.to.s04
+: title: show name
+  season: [1, 2, 3, 4]
+  type: episode
+
+# TODO: FixSeasonRangeDetection and episode_count scenario
+
 # FixEpisodeRangeDetection
 ? show name s02e01-e04
 : title: show name
   season: 2
   episode: [1, 2, 3, 4]
+  type: episode
+
+# FixEpisodeRangeDetection
+? show name s02e01-04
+: title: show name
+  season: 2
+  episode: [1, 2, 3, 4]
+  type: episode
+
+# FixWrongEpisodeDetectionInSeasonRange
+? Show.season_1-10.(DVDrip)
+: title: Show
+  season: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  format: DVD
   type: episode
 
 # ReleaseGroupPostProcessor
@@ -929,6 +1251,20 @@
   release_group: NF69 
   type: episode
 
+# FixWrongTitleDueToFilmTitle (and episode_title has the word: special)
+# https://github.com/guessit-io/guessit/issues/294
+? Show.Name.S02E05.F1.Special.720p.HDTV.x264-C4TV
+: title: Show Name
+  season: 2 
+  episode: 5
+  episode_details: Special
+  film: 1 # not a big issue right now
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  release_group: C4TV 
+  type: episode
+
 # Corner case with absolute numbering
 ? "[SuperGroup].Show.Name.-.462.[1080p]"
 : title: Show Name
@@ -989,11 +1325,31 @@
   type: episode
   disabled: true # to be fixed
 
-# CreateExtendedTitleWithAlternativeTitles
+# CreateExtendedTitleWithAlternativeTitles (separated by +)
 ? "[SuperGroup].Show.Name.-.Still+Name.-.11.[1080p]"
 : title: Show Name
   alternative_title: [Still, Name]
   extended_title: "Show Name - Still+Name"
+  absolute_episode: 11
+  screen_size: 1080p
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithAlternativeTitles (separated by -)
+? "[SuperGroup].Show.Name.-.Still.-.Name.-.11.[1080p]"
+: title: Show Name
+  alternative_title: [Still, Name]
+  extended_title: "Show Name - Still - Name"
+  absolute_episode: 11
+  screen_size: 1080p
+  release_group: SuperGroup
+  type: episode
+
+# CreateExtendedTitleWithAlternativeTitles (separated by space)
+? "[SuperGroup].Show.Name.-.Still.Name.-.11.[1080p]"
+: title: Show Name
+  alternative_title: Still Name
+  extended_title: "Show Name - Still Name"
   absolute_episode: 11
   screen_size: 1080p
   release_group: SuperGroup
@@ -1093,6 +1449,47 @@
   release_group: AnimeRG
   type: episode
 
+# FixAnimeReleaseGroup (negative scenario)
+# It's not an anime
+? "[PRiVATE].Fear.The.Show.Name.S02E02.HDTV.XviD-FUM[ettv]"
+: title: Fear The Show Name
+  season: 2
+  episode: 2
+  format: HDTV
+  video_codec: XviD
+  release_group: FUM
+  type: episode
+
+# FixAnimeReleaseGroup (negative scenario)
+# It's not an anime
+? "[REQ].The.Show.Name.S02E02.HDTV.h265-ABC[rartv]"
+: title: The Show Name
+  season: 2
+  episode: 2
+  format: HDTV
+  video_codec: h265
+  release_group: ABC
+  type: episode
+
+# FixAnimeReleaseGroup (negative scenario)
+# It's not an anime
+? "[NO.RAR].The.Show.Name.S05E01.HDTV.h264-GOOD[trash]"
+: title: The Show Name
+  season: 5
+  episode: 1
+  format: HDTV
+  video_codec: h264
+  release_group: GOOD
+  type: episode
+
+# FixAnimeReleaseGroup (options = show_type: regular
+? "[FakeGroup].Show.Name.[720p].[RealGroup]"
+: options: {show_type: regular}
+  title: Show Name
+  screen_size: 720p
+  release_group: RealGroup
+  type: episode
+
 # Corner Case: Additional implicit episode
 ? Show.Name.S03E21.22.FASTSUB.VOSTFR.HDTV.XviD.GROUP
 : title: Show Name
@@ -1120,13 +1517,14 @@
   film: 1 # not a big issue#
   type: episode
 
-# It's not an anime
-? "[PRiVATE].Fear.The.Show.Name.S02E02.HDTV.XviD-FUM[ettv]"
-: title: Fear The Show Name
-  season: 2
-  episode: 2
+# Title dots should be kept
+? 11.22.63.105.hdtv-abc
+: title: 11.22.63
+  season: 1
+  episode: 5
   format: HDTV
-  video_codec: XviD
-  release_group: FUM
+  release_group: abc
   type: episode
+
+
 
