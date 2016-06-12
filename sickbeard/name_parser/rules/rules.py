@@ -95,6 +95,120 @@ class FixAnimeReleaseGroup(Rule):
                 return to_remove, to_append
 
 
+class SpanishNewpctReleaseName(Rule):
+    """
+    This rule is to handle the newpct release name style
+
+    e.g.: Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
+
+    guessit -t episode "Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT"
+
+    without this rule:
+        For: Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
+        GuessIt found: {
+            "title": "Show Name",
+            "alternative_title": "Temporada",
+            "episode": [
+                1,
+                2
+            ],
+            "screen_size": "720p",
+            "format": "HDTV",
+            "video_codec": "h264",
+            "season": 1,
+            "language": "Spanish",
+            "episode_title": "AUDIO-NEWPCT",
+            "type": "episode"
+        }
+
+
+    with this rule:
+        For: Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
+        GuessIt found: {
+            "title": "Show Name",
+            "season": 1,
+            "episode": 2
+            "screen_size": "720p",
+            "format": "HDTV",
+            "video_codec": "h264",
+            "language": "Spanish",
+            "release_group": "NEWPCT"
+            "type": "episode"
+        }
+
+    """
+    priority = POST_PROCESS
+    consequence = [RemoveMatch, AppendMatch]
+    season_words = ('temporada', 'temp', 'tem')
+    sample = '[Cap.1408_1409]'
+    episode_re = re.compile(r'^\[cap\.(?P<season>\d{1,2})(?P<episode>\d{2})'
+                            r'(_((?P<end_season>\d{1,2})(?P<end_episode>\d{2})))?\]', flags=re.IGNORECASE)
+
+    def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
+        alternative_title = matches.named('alternative_title', index=0, predicate=
+                                          lambda mat: mat.value.lower() in self.season_words)
+        # there should be an alternative_title with the word season in spanish
+        if alternative_title:
+            season = matches.named('season', index=0)
+            # and the first hole before the correct matched season should be the word episode (cap) in spanish
+            hole = matches.holes(end=season.start, index=-1) if season else None
+            string = matches.input_string[hole.start:hole.start+len(self.sample)] if hole else None
+            # then search the season and episode numbers: [Cap.102_103]
+            m = self.episode_re.search(string) if string else None
+            g = m.groupdict() if m else None
+            # if found and the season numbers match...
+            if g and int(g['season']) == season.value and (not g['end_season'] or int(g['end_season']) == season.value):
+                if not context.get('show_type'):
+                    # fix the show_type as this is not anime
+                    context['show_type'] = 'regular'
+
+                to_remove = []
+                to_append = []
+
+                # remove the wrong alternative title
+                to_remove.append(alternative_title)
+                # remove all episode matches, since we're rebuild them
+                to_remove.extend(matches.named('episode'))
+
+                first_ep_num = int(g['episode'])
+                last_ep_num = int(g['end_episode']) if g['end_episode'] else first_ep_num
+                if 0 <= last_ep_num - first_ep_num < 100:
+                    start_index = hole.start + len(g['season']) + 5
+
+                    # rebuild all episode matches
+                    for ep_num in range(first_ep_num, last_ep_num + 1):
+                        new_episode = copy.copy(season)
+                        new_episode.name = 'episode'
+                        new_episode.tags = ['newpct']
+                        new_episode.value = ep_num
+                        if ep_num == first_ep_num:
+                            new_episode.start = start_index
+                            new_episode.end = new_episode.start + len(g['episode'])
+                        elif ep_num != last_ep_num:
+                            new_episode.start = start_index + len(g['episode'])
+                            new_episode.end = new_episode.start + 1
+                        else:
+                            new_episode.start = start_index + len(g['episode']) + len(g['end_season']) + 1
+                            new_episode.end = new_episode.start + len(g['end_episode'])
+                        to_append.append(new_episode)
+
+                # sometimes, there's a wrong episode title...
+                episode_title = matches.named('episode_title', index=0, predicate=
+                                              lambda ma: ma.value.lower() == 'audio')
+                if episode_title:
+                    # so, remove it
+                    to_remove.append(episode_title)
+
+                return to_remove, to_append
+
+
 class FixScreenSizeConflict(Rule):
     """
     Certain release names contains a conflicting screen_size (e.g.: 720 without p). It confuses guessit: the guessed
@@ -1345,6 +1459,7 @@ def rules():
     """
     return Rebulk().rules(
         FixAnimeReleaseGroup,
+        SpanishNewpctReleaseName,
         FixInvalidTitleOrAlternativeTitle,
         FixScreenSizeConflict,
         FixWrongTitleDueToFilmTitle,

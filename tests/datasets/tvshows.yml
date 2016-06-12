@@ -127,40 +127,37 @@
   episode_title: My Episode
   type: episode
 
-# newpct
+# newpct (SpanishNewpctReleaseName)
 ? Show Name - Temporada 4 HDTV x264[Cap.408_409]SPANISH-AUDIO-NEWPCT
 : title: Show Name
-  season 4:
+  season: 4
   episode: [8, 9]
   format: HDTV
   video_codec: h264
   language: es
   release_group: NEWPCT
   type: episode
-  disabled: true # work in progress
 
-# newpct
+# newpct (SpanishNewpctReleaseName)
 ? Show Name - Temporada 4 [HDTV][Cap.408][Espanol Castellano]
 : title: Show Name
-  season 4:
+  season: 4
   episode: 8
   format: HDTV
-  language: es
-  release_group: NEWPCT
+#  language: es
+  release_group: Espanol Castellano # Not a big issue (couldn't find a real scenario)
   type: episode
-  disabled: true # work in progress
 
-# newpct
+# newpct (SpanishNewpctReleaseName)
 ? Show Name - Temporada 4 HDTV x264[Cap.409]SPANISH AUDIO-NEWPCT)
 : title: Show Name
-  season 4:
-  episode: 8
+  season: 4
+  episode: 9
   format: HDTV
   video_codec: h264
   language: es
   release_group: NEWPCT
   type: episode
-  disabled: true # work in progress
 
 # scene_date_format
 ? Show.Name.2010.11.23.HDTV.720p.x264-Group
@@ -1526,5 +1523,74 @@
   release_group: abc
   type: episode
 
+# SpanishNewpctReleaseName - season and episode:
+? Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
+: title: Show Name
+  season: 1
+  episode: 2
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  language: es
+  release_group: NEWPCT
+  type: episode
 
+# SpanishNewpctReleaseName - season and episode with range:
+? Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102_104]SPANISH.AUDIO-NEWPCT
+: title: Show Name
+  season: 1
+  episode: [2, 3, 4]
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  language: es
+  release_group: NEWPCT
+  type: episode
 
+# SpanishNewpctReleaseName - season and episode (2 digit season)
+? Show.Name.-.Temporada.15.720p.HDTV.x264[Cap.1503]SPANISH.AUDIO-NEWPCT
+: title: Show Name
+  season: 15
+  episode: 3
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  language: es
+  release_group: NEWPCT
+  type: episode
+
+# SpanishNewpctReleaseName - season and episode (2 digit season with range)
+? Show.Name.-.Temporada.15.720p.HDTV.x264[Cap.1503_1506]SPANISH.AUDIO-NEWPCT
+: title: Show Name
+  season: 15
+  episode: [3, 4, 5, 6]
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  language: es
+  release_group: NEWPCT
+  type: episode
+
+# SpanishNewpctReleaseName - season and episode:
+? Show.Name.-.Temp.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
+: title: Show Name
+  season: 1
+  episode: 2
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  language: es
+  release_group: NEWPCT
+  type: episode
+
+# SpanishNewpctReleaseName - season and episode:
+? Show.Name.-.Tem.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
+: title: Show Name
+  season: 1
+  episode: 2
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  language: es
+  release_group: NEWPCT
+  type: episode

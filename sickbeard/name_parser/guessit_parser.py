@@ -63,6 +63,9 @@ class GuessitNameParser(object):
         r're:\bTL$',
         r're:\bYT$',
         r're:\bZT$',
+
+        # in conjunction with rule: SpanishNewpctReleaseName
+        r're:\bNEWPCT\b',
     }
 
     def guess(self, name, show_type=None):
