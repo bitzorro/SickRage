@@ -19,20 +19,21 @@ class GuessitNameParser(object):
         '11.22.63',
 
         # guessit gets confused because of the numbers (only in some special cases)
-        r're:^12 Monkeys\b',
-        r're:^60 Minutes\b',
-        r're:^Star Trek DS9\b',
-        r're:^The 100\b',
+        # (?<![^/\\]) means -> it matches nothing but path separators  (negative lookbehind)
+        r're:(?<![^/\\])12 Monkeys\b',
+        r're:(?<![^/\\])60 Minutes\b',
+        r're:(?<![^/\\])Star Trek DS9\b',
+        r're:(?<![^/\\])The 100\b',
 
         # https://github.com/guessit-io/guessit/issues/298
         # guessit identifies as website
-        r're:^\w+ Net\b',
+        r're:(?<![^/\\])\w+ Net\b',
 
         # guessit confuses Pan with language Panjabi
         r're:\bPan de Peace\b!',
 
         # guessit gives: "subtitle_language": "Oromo"  and it skips the title
-        r're:^Storm Chasers\b',
+        r're:(?<![^/\\])Storm Chasers\b',
     }
 
     # release group exception list

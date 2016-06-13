@@ -9,6 +9,7 @@ For each rule:
   - An example of the guessit output without it
   - An example of the guessit output with it
   - Each rule should handle only one issue
+  - Remember that the input stream might be a filepath: /Show Name/Season 1/Show Name S01E02.ext
   - Use rule.priority = POST_PROCESSOR (DO NOT change this*)
   - DO NOT use rule.dependency**
   - DO NOT change match.value. Just remove the match and append a new one with the amended value***
@@ -76,22 +77,30 @@ class FixAnimeReleaseGroup(Rule):
         :type context: dict
         :return:
         """
-        title = matches.named('title', index=0)
-        # the problem happens when there's no match before the title...
-        if context.get('show_type') != 'regular' and title and not matches.previous(title):
-            holes = matches.holes(start=0, end=title.start)
-            hole = holes[0] if len(holes) == 1 else None
-            m = self.release_group_re.match(hole.raw) if hole else None
-            # ... and there's one hole (the correct release group)
+        if context.get('show_type') != 'regular':
+            # the last filepart
+            filepart = matches.markers.named('path', index=-1)
+
+            # get the group (e.g.: [abc]) at the beginning of this filepart
+            group = matches.markers.at_match(filepart, index=0, predicate=lambda marker: marker.name == 'group')
+
+            # if there's no group or there's already a match at this position, skip...
+            if not group or matches.at_match(group):
+                return
+
+            m = self.release_group_re.match(group.raw)
+            # if the group matches the anime's release group pattern and it's not blacklisted
             if m and m.group('release_group').lower() not in self.blacklist:
-                new_release_group = copy.copy(hole)
+                new_release_group = copy.copy(group)
+                new_release_group.marker = None
                 new_release_group.name = 'release_group'
                 new_release_group.value = m.group('release_group')
-                new_release_group.tags.append('anime')
+                new_release_group.tags = ['anime']
 
                 to_append = new_release_group
                 to_remove = matches.named('release_group')
 
+                # remove the old release_group, append the new one
                 return to_remove, to_append
 
 
@@ -151,16 +160,24 @@ class SpanishNewpctReleaseName(Rule):
         :type context: dict
         :return:
         """
+        season = matches.named('season', index=0)
+        if not season:
+            return
+
         alternative_title = matches.named('alternative_title', index=0, predicate=
-                                          lambda mat: mat.value.lower() in self.season_words)
-        # there should be an alternative_title with the word season in spanish
-        if alternative_title:
-            season = matches.named('season', index=0)
-            # and the first hole before the correct matched season should be the word episode (cap) in spanish
-            hole = matches.holes(end=season.start, index=-1) if season else None
-            string = matches.input_string[hole.start:] if hole else None
+                                          lambda match: match.value.lower() in self.season_words)
+        episode_title = matches.named('episode_title', index=0, predicate=
+                                      lambda match: match.value.lower() in self.season_words)
+
+        # skip if there isn't an alternative_title or episode_title with the word season in spanish
+        if not alternative_title and not episode_title:
+            return
+
+        # retrieve all groups
+        groups = matches.markers.named('group')
+        for group in groups:
             # then search the season and episode numbers: [Cap.102_103]
-            m = self.episode_re.search(string) if string else None
+            m = self.episode_re.search(group.raw)
             g = m.groupdict() if m else None
             # if found and the season numbers match...
             if g and int(g['season']) == season.value and (not g['end_season'] or int(g['end_season']) == season.value):
@@ -171,15 +188,13 @@ class SpanishNewpctReleaseName(Rule):
                 to_remove = []
                 to_append = []
 
-                # remove the wrong alternative title
-                to_remove.append(alternative_title)
                 # remove all episode matches, since we're rebuild them
                 to_remove.extend(matches.named('episode'))
 
                 first_ep_num = int(g['episode'])
                 last_ep_num = int(g['end_episode']) if g['end_episode'] else first_ep_num
                 if 0 <= last_ep_num - first_ep_num < 100:
-                    start_index = hole.start + len(g['season']) + 5
+                    start_index = group.start + len(g['season']) + 5
 
                     # rebuild all episode matches
                     for ep_num in range(first_ep_num, last_ep_num + 1):
@@ -199,11 +214,15 @@ class SpanishNewpctReleaseName(Rule):
                         to_append.append(new_episode)
 
                 # sometimes, there's a wrong episode title...
-                episode_title = matches.named('episode_title', index=0, predicate=
-                                              lambda ma: ma.value.lower() == 'audio')
+                if alternative_title:
+                    # remove the wrong alternative title
+                    to_remove.append(alternative_title)
+
                 if episode_title:
-                    # so, remove it
+                    # remove the wrong episode title
                     to_remove.append(episode_title)
+                    to_remove.extend(matches.named('episode_title', predicate=
+                                                   lambda match: match.value.lower() == 'audio'))
 
                 return to_remove, to_append
 
@@ -670,8 +689,8 @@ class AnimeWithSeasonAbsoluteEpisodeNumbers(Rule):
         :return:
         """
         if context.get('show_type') != 'regular' and matches.tagged('anime'):
-            season = matches.named('season', index=0)
-            if season:
+            seasons = matches.named('season')
+            for season in seasons:
                 title = matches.previous(season, index=-1)
                 episode_title = matches.next(season, index=0)
 
@@ -687,8 +706,11 @@ class AnimeWithSeasonAbsoluteEpisodeNumbers(Rule):
                     new_title = copy.copy(title)
                     new_title.value = ' '.join([title.value, season.parent.value])
                     new_title.end = season.end
+
+                    # other fileparts might have the same season to be removed from the matches
+                    # e.g.: /Show.Name.S2/[Group].Show.Name.S2.-.19.[1080p]
+                    to_remove.extend(matches.named('season', predicate=lambda match: match.value == season.value))
                     to_remove.append(title)
-                    to_remove.append(season)
                     to_append.append(new_title)
 
                     # move episode_title to absolute_episode
