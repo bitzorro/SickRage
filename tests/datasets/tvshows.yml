@@ -1286,6 +1286,16 @@
   format: HDTV
   type: episode
 
+# FixSeasonEpisodeDetection
+? /Some.Show.S02E14.X264.1080p.HDTV/Some.Show.S02E14.X264.1080p.HDTV
+: title: Some Show
+  season: 2
+  episode: 14
+  video_codec: h264
+  screen_size: 1080p
+  format: HDTV
+  type: episode
+
 # FixSeasonEpisodeDetection (h265)
 ? Some.Show.S02E14.X265.1080p.HDTV
 : title: Some Show
@@ -1317,6 +1327,19 @@
 
 # FixWrongSeasonAndReleaseGroup
 ? Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
+: title: Show Name
+  season: 6
+  episode: 4
+  screen_size: 1080i
+  format: HDTV
+  audio_codec: DolbyDigital
+  audio_channels: '5.1'
+  video_codec: h264
+  release_group: BS666
+  type: episode
+
+# FixWrongSeasonAndReleaseGroup
+? /Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666/Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
 : title: Show Name
   season: 6
   episode: 4
@@ -1372,6 +1395,13 @@
   season: [1, 2, 3, 4]
   type: episode
 
+# FixSeasonRangeDetection (negative scenario - not a season range)
+? /show name s01-s04/show name s01E03
+: title: show name
+  season: 1
+  episode: 3
+  type: episode
+
 # TODO: FixSeasonRangeDetection and episode_count scenario
 
 # FixEpisodeRangeDetection
@@ -1387,6 +1417,14 @@
   season: 2
   episode: [1, 2, 3, 4]
   type: episode
+
+# FixEpisodeRangeWithSeasonDetection
+? Show.Name.S01E01-S01E04
+: title: Show Name
+  season: 1
+  episode: [1, 2, 3, 4]
+  type: episode
+
 
 # FixWrongEpisodeDetectionInSeasonRange
 ? Show.season_1-10.(DVDrip)

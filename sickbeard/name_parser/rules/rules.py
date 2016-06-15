@@ -35,6 +35,9 @@ from rebulk.rebulk import Rebulk
 from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
 
 
+season_range_separator = ('-', '~', '-s', '.to.s')
+
+
 class FixAnimeReleaseGroup(Rule):
     """
     Anime release group is at the beginning and inside square brackets. If this pattern is found at the start of the
@@ -983,15 +986,26 @@ class FixSeasonEpisodeDetection(Rule):
         :type context: dict
         :return:
         """
-        seasons = matches.named('season')
-        # bug happens when there are 2 seasons and no episode
-        if seasons and len(seasons) == 2 and not matches.named('episode'):
-            next_match = matches.next(seasons[-1], index=0)
-            # guessit gets confused when the next match is x264 or x265
-            if next_match and next_match.name == 'video_codec' and next_match.value in self.codec_names:
-                # rename the second season to episode
-                episode = seasons[1]
-                return episode
+        to_rename = []
+
+        fileparts = matches.markers.named('path')
+        for filepart in fileparts:
+            seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
+            # bug happens when there are 2 seasons...
+            if not seasons and len(seasons) != 2:
+                continue
+
+            # ... and no episodes
+            if not matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'episode'):
+                second_season = seasons[-1]
+                next_match = matches.range(second_season.end, filepart.end, index=0)
+                # guessit gets confused when the next match is x264 or x265
+                if next_match and next_match.name == 'video_codec' and next_match.value in self.codec_names:
+                    # rename the second season to episode
+                    episode = second_season
+                    to_rename.append(episode)
+
+        return to_rename
 
 
 class FixSeasonNotDetected(Rule):
@@ -1102,30 +1116,33 @@ class FixWrongSeasonAndReleaseGroup(Rule):
         :type context: dict
         :return:
         """
-        seasons = matches.named('season')
-        # only when there are 2 seasons
-        last_season = seasons[-1] if len(seasons) == 2 else None
-        previous = matches.previous(last_season, index=-1) if last_season else None
-        if previous and last_season:
-            holes = matches.holes(start=previous.end, end=last_season.start)
-            hole = holes[0] if len(holes) == 1 else None
-            # there's only 1 hole before the season
-            if hole:
-                to_remove = []
-                to_append = []
-                prefix = previous.value if previous.name == 'release_group' else ''
-                correct_release_group = prefix + hole.raw + last_season.raw
-                # and this hole is part of the problematic words
-                for word in self.problematic_words:
-                    if word in correct_release_group.lower():
-                        new_release_group = copy.copy(previous)
-                        new_release_group.value = correct_release_group
+        to_remove = []
+        to_append = []
 
-                        to_remove.append(last_season)
-                        to_remove.append(previous)
-                        to_append.append(new_release_group)
+        fileparts = matches.markers.named('path')
+        for filepart in fileparts:
+            seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
+            # only when there are 2 seasons
+            last_season = seasons[-1] if len(seasons) == 2 else None
+            previous = matches.previous(last_season, index=-1) if last_season else None
+            if previous and previous.start >= filepart.start:
+                holes = matches.holes(start=previous.end, end=last_season.start)
+                hole = holes[0] if len(holes) == 1 else None
+                # there's only 1 hole before the season
+                if hole:
+                    prefix = previous.value if previous.name == 'release_group' else ''
+                    correct_release_group = prefix + hole.raw + last_season.raw
+                    # and this hole is part of the problematic words
+                    for word in self.problematic_words:
+                        if word in correct_release_group.lower():
+                            new_release_group = copy.copy(previous)
+                            new_release_group.value = correct_release_group
 
-                return to_remove, to_append
+                            to_remove.append(last_season)
+                            to_remove.append(previous)
+                            to_append.append(new_release_group)
+
+        return to_remove, to_append
 
 
 class FixSeasonRangeDetection(Rule):
@@ -1163,7 +1180,6 @@ class FixSeasonRangeDetection(Rule):
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
-    range_separator = ('-', '-s', '.to.s')
 
     def when(self, matches, context):
         """
@@ -1173,29 +1189,36 @@ class FixSeasonRangeDetection(Rule):
         :type context: dict
         :return:
         """
-        seasons = matches.named('season')
-        # only when there are 2 seasons
-        start_season = seasons[0] if len(seasons) == 2 else None
-        end_season = seasons[-1] if len(seasons) == 2 else None
-        # and first season is lesser than the second and both are between 1 and 99
-        if start_season and end_season and 0 < start_season.value < end_season.value < 100:
-            season_separator = matches.input_string[start_season.end:end_season.start]
-            # and they are separated by a 'range separator'
-            if season_separator.lower() in self.range_separator:
-                to_append = []
-                to_remove = []
+        to_remove = []
+        to_append = []
 
-                episode_title = matches.next(start_season, index=0)
-                if episode_title and episode_title.name == 'episode_title' and episode_title.value.lower() == 'to':
-                    to_remove.append(episode_title)
+        fileparts = matches.markers.named('path')
+        for filepart in fileparts:
+            seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
+            # only when there are 2 seasons
+            start_season = seasons[0] if len(seasons) == 2 else None
+            end_season = seasons[-1] if len(seasons) == 2 else None
 
-                # then create the missing numbers
-                for i in range(start_season.value + 1, end_season.value):
-                    new_season = copy.copy(start_season)
-                    new_season.value = i
-                    to_append.append(new_season)
+            # and no episodes on any next fileparts
+            if matches.range(filepart.end, predicate=lambda match: match.name == 'episode'):
+                continue
 
-                return to_remove, to_append
+            # and first season is lesser than the second and both are between 1 and 99
+            if start_season and end_season and 0 < start_season.value < end_season.value < 100:
+                season_separator = matches.input_string[start_season.end:end_season.start]
+                # and they are separated by a 'season range separator'
+                if season_separator.lower() in season_range_separator:
+                    episode_title = matches.next(start_season, index=0)
+                    if episode_title and episode_title.name == 'episode_title' and episode_title.value.lower() == 'to':
+                        to_remove.append(episode_title)
+
+                    # then create the missing numbers
+                    for i in range(start_season.value + 1, end_season.value):
+                        new_season = copy.copy(start_season)
+                        new_season.value = i
+                        to_append.append(new_season)
+
+        return to_remove, to_append
 
 
 class FixEpisodeRangeDetection(Rule):
@@ -1203,9 +1226,9 @@ class FixEpisodeRangeDetection(Rule):
     Work-around for https://github.com/guessit-io/guessit/issues/287
     TODO: Remove when this bug is fixed
 
-    e.g.: show name s01-s04
+    e.g.: show name s02e01-e04
 
-    guessit -t episode "show name s01-s04"
+    guessit -t episode "show name s02e01-e04"
 
     without this fix:
         For: show name s02e01-e04
@@ -1244,23 +1267,31 @@ class FixEpisodeRangeDetection(Rule):
         :type context: dict
         :return:
         """
-        episodes = matches.named('episode')
-        episode_count = matches.next(episodes[0], index=0) if len(episodes) == 1 else None
-        if episode_count and episode_count.name == 'episode_count':
-            episodes.append(episode_count)
+        to_append = []
+        to_rename = []
 
-        # only when there are 2 episodes
-        start_episode = episodes[0] if len(episodes) == 2 else None
-        end_episode = episodes[-1] if len(episodes) == 2 else None
+        fileparts = matches.markers.named('path')
+        for filepart in fileparts:
+            episodes = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'episode')
 
-        # and first episode is lesser than the second and both are between 1 and 99
-        if start_episode and end_episode and 0 < start_episode.value < end_episode.value < 100:
+            episode_count = matches.next(episodes[0], index=0) if len(episodes) == 1 else None
+            if episode_count and episode_count.name == 'episode_count' and episode_count.end <= filepart.end:
+                episodes.append(episode_count)
+
+            # only when there are 2 episodes
+            start_episode = episodes[0] if len(episodes) == 2 else None
+            end_episode = episodes[-1] if len(episodes) == 2 else None
+
+            # and no episodes on any next fileparts
+            if matches.range(filepart.end, predicate=lambda match: match.name == 'episode'):
+                continue
+
+            # and first episode is lesser than the second and both are between 1 and 99
+            if start_episode and end_episode and 0 < start_episode.value < end_episode.value < 100:
                 holes = matches.holes(start=start_episode.end, end=end_episode.start)
                 hole = holes[0] if len(holes) == 1 else None
                 # and they are separated by a 'range separator'
                 if hole and hole.value.lower() in ('-', '-e'):
-                    to_append = []
-                    to_rename = []
                     # then create the missing numbers
                     for i in range(start_episode.value + 1, end_episode.value):
                         new_season = copy.copy(start_episode)
@@ -1270,7 +1301,92 @@ class FixEpisodeRangeDetection(Rule):
                     if end_episode.name == 'episode_count':
                         to_rename.append(end_episode)
 
-                    return to_append, to_rename
+        return to_append, to_rename
+
+
+class FixEpisodeRangeWithSeasonDetection(Rule):
+    """
+    Work-around for https://github.com/guessit-io/guessit/issues/287
+    TODO: Remove when this if this scenario is fixed upstream
+
+    e.g.: Show.Name.S01E01-S01E21
+
+    guessit -t episode "Show.Name.S01E01-S01E21"
+
+    without this fix:
+        For: Show.Name.S01E01-S01E04
+        GuessIt found: {
+            "title": "Show Name",
+            "season": 1,
+            "episode": [
+                1,
+                4
+            ],
+            "type": "episode"
+        }
+
+
+    with this fix:
+        For: Show.Name.S01E01-S01E04
+        GuessIt found: {
+            "title": "Show Name",
+            "season": 1,
+            "episode": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "type": "episode"
+        }
+    """
+    priority = POST_PROCESS
+    consequence = [RemoveMatch, AppendMatch]
+
+    def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
+        to_remove = []
+        to_append = []
+
+        fileparts = matches.markers.named('path')
+        for filepart in fileparts:
+            seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
+            # only when there are 2 seasons
+            start_season = seasons[0] if len(seasons) == 2 else None
+            end_season = seasons[-1] if len(seasons) == 2 else None
+
+            # and no episodes on any next fileparts
+            if matches.range(filepart.end, predicate=lambda match: match.name == 'episode'):
+                continue
+
+            # and first season is lesser than the second and both are between 1 and 99
+            if start_season and end_season and start_season.value == end_season.value:
+                first_episode = matches.next(start_season, index=0)
+                end_episode = matches.next(end_season, index=0)
+
+                if first_episode and end_episode and first_episode.name == end_episode.name == 'episode' \
+                        and 0 < first_episode.value < end_episode.value < 100:
+                    season_separator = matches.input_string[first_episode.end:end_season.start]
+                    # and they are separated by a 'season range separator'
+                    if season_separator.lower() in season_range_separator:
+                        episode_title = matches.next(start_season, index=0)
+                        if episode_title and episode_title.name == 'episode_title' \
+                                and episode_title.value.lower() == 'to':
+                            to_remove.append(episode_title)
+
+                        # then create the missing numbers
+                        for i in range(first_episode.value + 1, end_episode.value):
+                            new_episode = copy.copy(first_episode)
+                            new_episode.value = i
+                            to_append.append(new_episode)
+
+        return to_remove, to_append
 
 
 class FixWrongEpisodeDetectionInSeasonRange(Rule):
@@ -1336,14 +1452,21 @@ class FixWrongEpisodeDetectionInSeasonRange(Rule):
         :type context: dict
         :return:
         """
-        seasons = matches.named('season')
-        episodes = matches.named('episode')
-        # bug happens when there are more than 1 season and exactly 1 episode
-        if seasons and episodes and len(seasons) > 1 and len(episodes) == 1:
-            episode = episodes[0]
-            conflict = matches.at_match(episode, predicate=lambda match: not match.private and match.name == 'season')
-            if conflict:
-                return episode
+        to_remove = []
+
+        fileparts = matches.markers.named('path')
+        for filepart in fileparts:
+            seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
+            episodes = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'episode')
+            # bug happens when there are more than 1 season and exactly 1 episode
+            if seasons and episodes and len(seasons) > 1 and len(episodes) == 1:
+                episode = episodes[0]
+                conflict = matches.at_match(episode, predicate=
+                                            lambda match: not match.private and match.name == 'season')
+                if conflict:
+                    to_remove.append(episode)
+
+        return to_remove
 
 
 class ExpectedTitlePostProcessor(Rule):
@@ -1533,6 +1656,7 @@ def rules():
         FixSeasonEpisodeDetection,
         FixSeasonRangeDetection,
         FixEpisodeRangeDetection,
+        FixEpisodeRangeWithSeasonDetection,
         FixWrongEpisodeDetectionInSeasonRange,
         FixTitlesContainsNumber,
         AnimeWithSeasonAbsoluteEpisodeNumbers,
