@@ -9,7 +9,7 @@ For each rule:
   - An example of the guessit output without it
   - An example of the guessit output with it
   - Each rule should handle only one issue
-  - Remember that the input stream might be a filepath: /Show Name/Season 1/Show Name S01E02.ext
+  - Remember that the input might be a filepath: /Show Name/Season 1/Show Name S01E02.ext
   - Use rule.priority = POST_PROCESSOR (DO NOT change this*)
   - DO NOT use rule.dependency**
   - DO NOT change match.value. Just remove the match and append a new one with the amended value***
@@ -28,6 +28,8 @@ have a fixed execution order, that's why the rules() method should add the rules
 """
 import copy
 import re
+
+from guessit.rules.common.formatters import cleanup
 from rebulk.processors import POST_PROCESS
 from rebulk.rebulk import Rebulk
 from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
@@ -35,8 +37,8 @@ from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
 
 class FixAnimeReleaseGroup(Rule):
     """
-    Anime release group is at the beginning and inside square brackets. If this pattern is found for a 'hole', use it
-    as a release group
+    Anime release group is at the beginning and inside square brackets. If this pattern is found at the start of the
+    filepart, use it as a release group
 
     guessit -t episode "[RealGroup].Show.Name.-.462.[720p].[10bit].[SOMEPERSON].[Something]"
 
@@ -84,7 +86,7 @@ class FixAnimeReleaseGroup(Rule):
             # get the group (e.g.: [abc]) at the beginning of this filepart
             group = matches.markers.at_match(filepart, index=0, predicate=lambda marker: marker.name == 'group')
 
-            # if there's no group or there's already a match at this position, skip...
+            # if there's no group or there's already a match at this position, skip it...
             if not group or matches.at_match(group):
                 return
 
@@ -149,6 +151,7 @@ class SpanishNewpctReleaseName(Rule):
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
     season_words = ('temporada', 'temp', 'tem')
+    prefix = '[cap.'
     episode_re = re.compile(r'^\[cap\.(?P<season>\d{1,2})(?P<episode>\d{2})'
                             r'(_((?P<end_season>\d{1,2})(?P<end_episode>\d{2})))?.*\]', flags=re.IGNORECASE)
 
@@ -193,8 +196,8 @@ class SpanishNewpctReleaseName(Rule):
 
                 first_ep_num = int(g['episode'])
                 last_ep_num = int(g['end_episode']) if g['end_episode'] else first_ep_num
-                if 0 <= last_ep_num - first_ep_num < 100:
-                    start_index = group.start + len(g['season']) + 5
+                if 0 <= first_ep_num <= last_ep_num < 100:
+                    start_index = group.start + len(g['season']) + len(self.prefix)
 
                     # rebuild all episode matches
                     for ep_num in range(first_ep_num, last_ep_num + 1):
@@ -213,16 +216,17 @@ class SpanishNewpctReleaseName(Rule):
                             new_episode.end = new_episode.start + len(g['end_episode'])
                         to_append.append(new_episode)
 
-                # sometimes, there's a wrong episode title...
+                # sometimes, there's a wrong alternative title...
                 if alternative_title:
                     # remove the wrong alternative title
                     to_remove.append(alternative_title)
 
+                # sometimes, there's a wrong episode title...
                 if episode_title:
                     # remove the wrong episode title
                     to_remove.append(episode_title)
-                    to_remove.extend(matches.named('episode_title', predicate=
-                                                   lambda match: match.value.lower() == 'audio'))
+
+                to_remove.extend(matches.named('episode_title', predicate=lambda match: match.value.lower() == 'audio'))
 
                 return to_remove, to_append
 
@@ -278,13 +282,14 @@ class FixScreenSizeConflict(Rule):
         """
         screen_size = matches.named('screen_size', index=0)
         if screen_size:
-            return matches.at_match(screen_size, predicate=lambda m: m.name in ('season', 'episode'))
+            return matches.at_match(screen_size, predicate=lambda match: match.name in ('season', 'episode'))
 
 
 class FixInvalidTitleOrAlternativeTitle(Rule):
     """
-    Some release names have season/episode defined twice, and one of them becomes an alternative_title or a suffix
-    in the title. This fix will remove the invalid alternative_title or the invalid title's suffix
+    Some release names have season/episode defined twice (relative and absolute), and one of them becomes an
+    alternative_title or a suffix in the title. This fix will remove the invalid alternative_title or the
+    invalid title's suffix
 
     e.g.: "Show Name - 313-314 - s16e03-04"
 
@@ -309,6 +314,10 @@ class FixInvalidTitleOrAlternativeTitle(Rule):
         GuessIt found: {
             "title": "Show Name",
             "season": 16,
+            "absolute_episode": [
+                313,
+                314
+            ],
             "episode": [
                 3,
                 4
@@ -318,7 +327,7 @@ class FixInvalidTitleOrAlternativeTitle(Rule):
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
-    range_re = re.compile(r'\b\d{3,4}\-\d{3,4}$')
+    absolute_re = re.compile(r'([\W|_]*)(?P<absolute_episode_start>\d{3,4})\-(?P<absolute_episode_end>\d{3,4})\W*$')
 
     def when(self, matches, context):
         """
@@ -328,25 +337,51 @@ class FixInvalidTitleOrAlternativeTitle(Rule):
         :type context: dict
         :return:
         """
+        episodes = matches.named('episode')
+        if not episodes:
+            return
+
         to_remove = []
         to_append = []
 
-        alternative_titles = matches.named('alternative_title')
-        title = matches.named('title', index=0)
+        problematic_titles = []
+        problematic_titles.extend(matches.named('title'))
+        problematic_titles.extend(matches.named('alternative_title'))
+        problematic_titles.extend(matches.named('episode_title'))
 
-        if title:
-            new_value = self.range_re.sub('', title.value).strip()
-            if new_value != title.value:
-                new_title = copy.copy(title)
-                new_title.value = new_value
-                new_title.end = title.end - len(title.value) + len(new_value)
-                to_append.append(new_title)
+        for title in problematic_titles:
+            m = self.absolute_re.search(title.raw)
+            if m:
+                # Remove the problematic title
                 to_remove.append(title)
 
-        for alternative_title in alternative_titles:
-            # Not checking all numbers, only the pattern
-            if self.range_re.match(alternative_title.value):
-                to_remove.append(alternative_title)
+                # Remove the title suffix
+                new_value = title.raw[0: m.start()]
+                if new_value:
+                    # Add the correct title
+                    new_title = copy.copy(title)
+                    new_title.value = cleanup(new_value)
+                    new_title.end = m.start()
+                    to_append.append(new_title)
+
+                # and add the absolute episode range
+                g = m.groupdict()
+                absolute_episode_start = int(g['absolute_episode_start'])
+                absolute_episode_end = int(g['absolute_episode_end'])
+                for i in range(absolute_episode_start, absolute_episode_end + 1):
+                    episode = copy.copy(episodes[0])
+                    episode.name = 'absolute_episode'
+                    episode.value = i
+                    if i == absolute_episode_start:
+                        episode.start = title.start + m.start('absolute_episode_start')
+                        episode.end = title.start + m.end('absolute_episode_start')
+                    elif i < absolute_episode_end:
+                        episode.start = title.start + m.end('absolute_episode_start')
+                        episode.end = title.start + m.start('absolute_episode_end')
+                    else:
+                        episode.start = title.start + m.start('absolute_episode_end')
+                        episode.end = title.start + m.end('absolute_episode_end')
+                    to_append.append(episode)
 
         return to_remove, to_append
 
@@ -495,7 +530,7 @@ class CreateExtendedTitleWithAlternativeTitles(Rule):
         if not title or not alternative_titles:
             return
 
-        if matches.named('alternative_title', predicate=lambda m: m.value.lower() in self.blacklist):
+        if matches.named('alternative_title', predicate=lambda match: match.value.lower() in self.blacklist):
             return
 
         previous = title
@@ -1142,16 +1177,18 @@ class FixSeasonRangeDetection(Rule):
         # only when there are 2 seasons
         start_season = seasons[0] if len(seasons) == 2 else None
         end_season = seasons[-1] if len(seasons) == 2 else None
-        # and first season is lesser than the second and the difference is not too big
-        if start_season and end_season and 1 < end_season.value - start_season.value < 100:
+        # and first season is lesser than the second and both are between 1 and 99
+        if start_season and end_season and 0 < start_season.value < end_season.value < 100:
             season_separator = matches.input_string[start_season.end:end_season.start]
             # and they are separated by a 'range separator'
             if season_separator.lower() in self.range_separator:
-                wrong_episode_title = matches.next(start_season,
-                                                   predicate=lambda m: m
-                                                   if m.name == 'episode_title' and m.value.lower() == 'to' else False)
                 to_append = []
-                to_remove = wrong_episode_title
+                to_remove = []
+
+                episode_title = matches.next(start_season, index=0)
+                if episode_title and episode_title.name == 'episode_title' and episode_title.value.lower() == 'to':
+                    to_remove.append(episode_title)
+
                 # then create the missing numbers
                 for i in range(start_season.value + 1, end_season.value):
                     new_season = copy.copy(start_season)
@@ -1216,8 +1253,8 @@ class FixEpisodeRangeDetection(Rule):
         start_episode = episodes[0] if len(episodes) == 2 else None
         end_episode = episodes[-1] if len(episodes) == 2 else None
 
-        # and first episode is lesser than the second and the difference is not too big
-        if start_episode and end_episode and 1 < end_episode.value - start_episode.value < 100:
+        # and first episode is lesser than the second and both are between 1 and 99
+        if start_episode and end_episode and 0 < start_episode.value < end_episode.value < 100:
                 holes = matches.holes(start=start_episode.end, end=end_episode.start)
                 hole = holes[0] if len(holes) == 1 else None
                 # and they are separated by a 'range separator'
@@ -1304,8 +1341,8 @@ class FixWrongEpisodeDetectionInSeasonRange(Rule):
         # bug happens when there are more than 1 season and exactly 1 episode
         if seasons and episodes and len(seasons) > 1 and len(episodes) == 1:
             episode = episodes[0]
-            conflicting_season = matches.at_match(episode, predicate=lambda m: not m.private and m.name == 'season')
-            if conflicting_season:
+            conflict = matches.at_match(episode, predicate=lambda match: not match.private and match.name == 'season')
+            if conflict:
                 return episode
 
 
@@ -1350,7 +1387,7 @@ class ExpectedTitlePostProcessor(Rule):
         """
         # All titles that matches because of a expected title was tagged as 'expected'
         # and title.value is not in the expected list, it's a regex
-        titles = matches.tagged('expected', predicate=lambda m: m.value not in context.get('expected_title'))
+        titles = matches.tagged('expected', predicate=lambda match: match.value not in context.get('expected_title'))
 
         to_remove = []
         to_append = []
@@ -1358,7 +1395,7 @@ class ExpectedTitlePostProcessor(Rule):
         for title in titles:
             # Remove all dots from the title
             new_title = copy.copy(title)  # IMPORTANT - never change the value. Better to remove and add it
-            new_title.value = title.value.replace('.', ' ')  # TODO: improve this
+            new_title.value = cleanup(title.value)
             to_remove.append(title)
             to_append.append(new_title)
 

@@ -568,51 +568,51 @@
 # Show.Name.S01.E02.E03
 
 # anime_and_normal (FixInvalidTitleOrAlternativeTitle - alternative_title case)
-? Show Name - s16e03-04 - 313-314
+? Show Name - s16e03-05 - 313-315
 : title: Show Name
+  absolute_episode: [313, 314, 315]
   season: 16
-  episode: [3, 4]
-  episode_title: 313-314 # work in progress
+  episode: [3, 4, 5]
   type: episode
 
 # anime_and_normal (FixInvalidTitleOrAlternativeTitle - alternative_title case)
-? Show.Name.s16e03-04.313-314
+? Show.Name.s16e03-05.313-315
 : title: Show Name
+  absolute_episode: [313, 314, 315]
   season: 16
-  episode: [3, 4]
-  episode_title: 313-314 # work in progress
+  episode: [3, 4, 5]
   type: episode
 
 # anime_and_normal (FixInvalidTitleOrAlternativeTitle - alternative_title case)
-? Show Name s16e03-04 313-314
+? Show Name s16e03-05 313-315
 : title: Show Name
+  absolute_episode: [313, 314, 315]
   season: 16
-  episode: [3, 4]
-  episode_title: 313-314 # work in progress
+  episode: [3, 4, 5]
   type: episode
 
 # anime_and_normal_x (FixInvalidTitleOrAlternativeTitle - alternative_title case)
-? Show Name - 16x03-04 - 313-314
+? Show Name - 16x03-05 - 313-315
 : title: Show Name
+  absolute_episode: [313, 314, 315]
   season: 16
-  episode: [3, 4]
-  episode_title: 313-314 # work in progress
+  episode: [3, 4, 5]
   type: episode
 
 # anime_and_normal_x (FixInvalidTitleOrAlternativeTitle - alternative_title case)
-? Show.Name.16x03-04.313-314
+? Show.Name.16x03-05.313-315
 : title: Show Name
+  absolute_episode: [313, 314, 315]
   season: 16
-  episode: [3, 4]
-  episode_title: 313-314 # work in progress
+  episode: [3, 4, 5]
   type: episode
 
 # anime_and_normal_x (FixInvalidTitleOrAlternativeTitle - alternative_title case)
-? Show Name 16x03-04 313-314
+? Show Name 16x03-05 313-315
 : title: Show Name
+  absolute_episode: [313, 314, 315]
   season: 16
-  episode: [3, 4]
-  episode_title: 313-314 # work in progress
+  episode: [3, 4, 5]
   type: episode
 
 # FixInvalidTitleOrAlternativeTitle - alternative_title case (negative scenario)
@@ -624,31 +624,34 @@
   type: episode
 
 # anime_and_normal_reverse (FixInvalidAlternativeTitle - title case)
-? Show Name - 313-314 - s16e03-04
+? Show Name - 313-315 - s16e03-05
 : title: Show Name
+  absolute_episode: [313, 314, 315]
   season: 16
-  episode: [3, 4]
+  episode: [3, 4, 5]
   type: episode
 
 # anime_and_normal_reverse (FixInvalidAlternativeTitle - title case)
-? Show.Name.313-314.s16e03-04
+? Show.Name.313-315.s16e03-05
 : title: Show Name
+  absolute_episode: [313, 314, 315]
   season: 16
-  episode: [3, 4]
+  episode: [3, 4, 5]
   type: episode
 
 # anime_and_normal_reverse (FixInvalidAlternativeTitle - title case)
-? Show Name 313-314 s16e03-04
+? Show Name 313-315 s16e03-05
 : title: Show Name
+  absolute_episode: [313, 314, 315]
   season: 16
-  episode: [3, 4]
+  episode: [3, 4, 5]
   type: episode
 
 # FixInvalidAlternativeTitle - title case (negative scenario)
-? Show Name 10-20 s16e03-04
-: title: Show Name 10-20
+? Show Name 315-313 s16e03-05
+: title: Show Name
   season: 16
-  episode: [3, 4]
+  episode: [3, 4, 5]
   type: episode
 
 # anime_and_normal_front
