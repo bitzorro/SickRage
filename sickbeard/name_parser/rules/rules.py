@@ -35,7 +35,7 @@ from rebulk.rebulk import Rebulk
 from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
 
 
-season_range_separator = ('-', '~', '-s', '.to.s')
+season_range_separator = ('-', '~', '_-_', '-s', '.to.s', '.to.')
 
 
 class FixAnimeReleaseGroup(Rule):
