@@ -1696,7 +1696,7 @@ class TVEpisode(object):  # pylint: disable=too-many-instance-attributes, too-ma
                         status=statusStrings[self.status], location=self.location), logger.DEBUG)
 
         if not ek(os.path.isfile, self.location):
-            if self.airdate >= datetime.date.today() or self.airdate == datetime.date.fromordinal(1):
+            if (self.airdate >= datetime.date.today() or self.airdate == datetime.date.fromordinal(1)) and self.status in (UNAIRED, UNKNOWN):
                 logger.log(u"%s: Episode airs in the future or has no airdate, marking it %s" % (self.show.indexerid, statusStrings[UNAIRED]), logger.DEBUG)
                 self.status = UNAIRED
             elif self.status in [UNAIRED, UNKNOWN]:
