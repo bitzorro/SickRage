@@ -1625,6 +1625,9 @@ class ReleaseGroupPostProcessor(Rule):
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
     regexes = [
+        # italian release: drop everything after [CURA]
+        re.compile(r'\[CURA\].*$', flags=re.IGNORECASE),
+
         # [word], (word), {word}
         re.compile(r'(?<=.)\W*[\[\(\{].+[\}\)\]]?\W*$', flags=re.IGNORECASE),
 

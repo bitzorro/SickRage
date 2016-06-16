@@ -1990,7 +1990,7 @@
   release_group: KTM3
   disabled: true # is it important?
 
-#
+# FixMultipleTitles
 ? /shows/Show.Name.S01E05.WEBRip.x264-GROUP__gYDfLA/Show.Name.S01E05.WEBRip.x264-GROUP"
 : title: Show Name
   season: 1
@@ -2000,4 +2000,86 @@
   release_group: GROUP
   type: episode
 
+# normal release with date
+? Show.Name.2016.06.14.Some.Title.720p.HDTV.x264-GROUP
+: title: Show Name
+  date: 2016-06-14
+  episode_title: Some Title
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+# Italian releases
+? Show Name S02e19 [Mux - H264 - Ita Aac] DLMux by UBi
+: title: Show Name
+  season: 2
+  episode: 19
+  video_codec: h264
+  language: it
+  audio_codec: AAC
+  format: WEB-DL
+  release_group: UBi
+  type: episode
+
+? Show Name S01e04 [SATrip - H264 - Ita Ac3] HDTV - DEUS TEAM
+: title: Show Name
+  season: 1
+  episode: 4
+  video_codec: h264
+  language: it
+  audio_codec: AC3
+  format: HDTV
+  release_group: DEUS TEAM
+  type: episode
+
+? Show Name S01e10[Mux - 1080p - H264 - Ita Eng Ac3 - Sub Ita Eng]DLMux By GiuseppeTnT Littlelinx
+: title: Show Name
+  season: 1
+  episode: 10
+  screen_size: 1080p
+  video_codec: h264
+  language: [it, en]
+  format: WEB-DL
+  audio_codec: AC3
+  subtitle_language: [it, en]
+  release_group: GiuseppeTnT Littlelinx
+  type: episode
+
+? Show Name S04e07-08 [H264 - Ita Aac] HDTVMux by NovaRip
+: title: Show Name
+  season: 4
+  episode: [7, 8]
+  video_codec: h264
+  language: it
+  audio_codec: AAC
+  format: HDTV
+  release_group: NovaRip
+  type: episode
+
+? Show Name 3x18 Un Tuffo Nel Passato ITA HDTVMux x264 NovaRip
+: title: Show Name
+  season: 3
+  episode: 18
+  episode_title: Un Tuffo Nel Passato
+  language: it
+  format: HDTV
+  video_codec: h264
+  release_group: NovaRip
+  type: episode
+
+? Show Name (2014) S02e23 [Mux - XviD - Ita Eng Mp3 - Sub Ita Eng] DLMux By Pir8 [CURA] Supereroi SEASON FINALE
+: title: Show Name
+  extended_title: Show Name 2014
+  year: 2014
+  season: 2
+  episode: 23
+  video_codec: XviD
+  language: [it, en]
+  audio_codec: MP3
+  subtitle_language: [it, en]
+  format: WEB-DL
+  release_group: Pir8
+  type: episode
 

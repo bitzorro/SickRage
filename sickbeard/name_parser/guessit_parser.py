@@ -5,9 +5,6 @@ Guessit Name Parser
 """
 import guessit
 
-from guessit.api import default_api
-from sickbeard.name_parser.rules.rules import rules
-
 
 class GuessitNameParser(object):
     """
@@ -111,6 +108,4 @@ class GuessitNameParser(object):
 def ensure_list(value):
     return sorted(value) if isinstance(value, list) else [value] if value is not None else []
 
-
-default_api.rebulk.rebulk(rules())
 parser = GuessitNameParser()
