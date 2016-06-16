@@ -52,6 +52,9 @@ def containsAtLeastOneWord(name, words):
 
     Returns: False if the name doesn't contain any word of words list, or the found word from the list.
     """
+    if not (name and words):
+        return False
+
     if isinstance(words, basestring):
         words = words.split(',')
     items = [(re.compile(r'(^|[\W_])%s($|[\W_])' % word.strip(), re.I), word.strip()) for word in words]
@@ -59,12 +62,13 @@ def containsAtLeastOneWord(name, words):
         if regexp.search(name):
             # subs_words = '.dub.' or '.dksub.' or else
             subs_word = regexp.search(name).group(0)
-            # If word is a regex like "dub(bed)?" or "sub(bed|ed|pack|s)" 
+            # If word is a regex like "dub(bed)?" or "sub(bed|ed|pack|s)"
             # then return just the matched word: "dub" and not full regex
             if word in resultFilters:
-                return subs_word.replace(".","")
+                return subs_word.replace(".", "")
             else:
                 return word
+
     return False
 
 
@@ -183,7 +187,7 @@ def show_words(showObj):
     """
 
     ShowWords = namedtuple('show_words', ['preferred_words', 'undesired_words', 'ignore_words', 'require_words'])
-    
+
     preferred_words = ",".join(sickbeard.PREFERRED_WORDS.split(',')) if sickbeard.PREFERRED_WORDS.split(',') else ''
     undesired_words = ",".join(sickbeard.UNDESIRED_WORDS.split(',')) if sickbeard.UNDESIRED_WORDS.split(',') else ''
 
@@ -201,5 +205,5 @@ def show_words(showObj):
 
     ignore_words = ",".join(final_ignore)
     require_words = ",".join(final_require)
-    
+
     return ShowWords(preferred_words, undesired_words, ignore_words, require_words)
