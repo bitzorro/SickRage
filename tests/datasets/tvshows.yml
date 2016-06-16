@@ -1989,3 +1989,15 @@
   audio_channels: '2.0'
   release_group: KTM3
   disabled: true # is it important?
+
+#
+? /shows/Show.Name.S01E05.WEBRip.x264-GROUP__gYDfLA/Show.Name.S01E05.WEBRip.x264-GROUP"
+: title: Show Name
+  season: 1
+  episode: 5
+  format: WEBRip
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+

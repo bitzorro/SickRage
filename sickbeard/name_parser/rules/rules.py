@@ -1530,6 +1530,61 @@ class ExpectedTitlePostProcessor(Rule):
         return to_remove, to_append
 
 
+class FixMultipleTitles(Rule):
+    """
+    Probably a guessit bug, guessit might return more than one title instead of alternative_titles
+
+    e.g.: /shows/Show.Name.S01E05.WEBRip.x264-GROUP__gYDfLA/Show.Name.S01E05.WEBRip.x264-GROUP
+
+    guessit -t episode "/shows/Show.Name.S01E05.WEBRip.x264-GROUP__gYDfLA/Show.Name.S01E05.WEBRip.x264-GROUP"
+
+    without this rule:
+        For: /shows/Show.Name.S01E05.WEBRip.x264-GROUP__gYDfLA/Show.Name.S01E05.WEBRip.x264-GROUP
+        GuessIt found: {
+            "title": [
+                "Show Name",
+                "GROUP gYDfLA"
+            ],
+            "season": 1,
+            "episode": 5,
+            "format": "WEBRip",
+            "video_codec": "h264",
+            "release_group": "GROUP",
+            "type": "episode"
+        }
+
+    with this rule:
+        For: /shows/Show.Name.S01E05.WEBRip.x264-GROUP__gYDfLA/Show.Name.S01E05.WEBRip.x264-GROUP
+        GuessIt found: {
+            "title": "Show Name",
+            "season": 1,
+            "episode": 5,
+            "format": "WEBRip",
+            "video_codec": "h264",
+            "release_group": "GROUP",
+            "type": "episode"
+        }
+
+    """
+    priority = POST_PROCESS
+    consequence = RemoveMatch
+
+    def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
+        # In case of duplicated titles, keep only the first one
+        titles = matches.named('title')
+
+        to_remove = titles[1:]
+
+        return to_remove
+
+
 class ReleaseGroupPostProcessor(Rule):
     """
     Release Group post processor
@@ -1651,6 +1706,7 @@ def rules():
     :rtype: Rebulk
     """
     return Rebulk().rules(
+        FixMultipleTitles,
         FixAnimeReleaseGroup,
         SpanishNewpctReleaseName,
         FixInvalidTitleOrAlternativeTitle,
