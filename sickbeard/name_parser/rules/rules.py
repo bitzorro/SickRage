@@ -71,8 +71,8 @@ class FixAnimeReleaseGroup(Rule):
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
-    release_group_re = re.compile(r'^\[(?P<release_group>\w+\.?\w+)\]$', flags=re.IGNORECASE)
-    blacklist = ('private', 'req', 'no.rar')
+    release_group_re = re.compile(r'^\[(?P<release_group>\w+)\]$', flags=re.IGNORECASE)
+    blacklist = ('private', 'req')
 
     def when(self, matches, context):
         """
@@ -82,16 +82,17 @@ class FixAnimeReleaseGroup(Rule):
         :type context: dict
         :return:
         """
-        if context.get('show_type') != 'regular':
-            # the last filepart
-            filepart = matches.markers.named('path', index=-1)
+        if context.get('show_type') == 'regular':
+            return
 
+        fileparts = matches.markers.named('path')
+        for filepart in fileparts:
             # get the group (e.g.: [abc]) at the beginning of this filepart
             group = matches.markers.at_match(filepart, index=0, predicate=lambda marker: marker.name == 'group')
 
             # if there's no group or there's already a match at this position, skip it...
             if not group or matches.at_match(group):
-                return
+                continue
 
             m = self.release_group_re.match(group.raw)
             # if the group matches the anime's release group pattern and it's not blacklisted
@@ -283,9 +284,13 @@ class FixScreenSizeConflict(Rule):
         :type context: dict
         :return:
         """
-        screen_size = matches.named('screen_size', index=0)
-        if screen_size:
-            return matches.at_match(screen_size, predicate=lambda match: match.name in ('season', 'episode'))
+        to_remove = []
+
+        screen_sizes = matches.named('screen_size')
+        for screen_size in screen_sizes:
+            to_remove.extend(matches.at_match(screen_size, predicate=lambda match: match.name in ('season', 'episode')))
+
+        return to_remove
 
 
 class FixInvalidTitleOrAlternativeTitle(Rule):
