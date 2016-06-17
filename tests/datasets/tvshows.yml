@@ -1468,6 +1468,17 @@
   type: episode
 
 # ReleaseGroupPostProcessor
+? Some.Show.S02E14.1080p.HDTV.X264-4.2GB.GROUP
+: title: Some Show
+  season: 2
+  episode: 14
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+# ReleaseGroupPostProcessor
 ? Some.Show.S02E14.1080p.HDTV.X264-reenc.GROUP
 : title: Some Show
   season: 2

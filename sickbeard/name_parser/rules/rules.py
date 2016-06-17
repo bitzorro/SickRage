@@ -1632,8 +1632,8 @@ class ReleaseGroupPostProcessor(Rule):
         re.compile(r'(?<=.)\W*[\[\(\{].+[\}\)\]]?\W*$', flags=re.IGNORECASE),
 
         # https://github.com/guessit-io/guessit/issues/299
-        # 200MB, 1GB
-        re.compile(r'(\W*\b\d+[mg]b\b\W*)', flags=re.IGNORECASE),
+        # 200MB, 1GB, 4.2GB, 1.1TB
+        re.compile(r'(\W*\b(\d+\.)?\d+[mgt]b\b\W*)', flags=re.IGNORECASE),
 
         # https://github.com/guessit-io/guessit/issues/301
         # vol255+101
