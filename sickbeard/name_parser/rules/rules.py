@@ -232,6 +232,7 @@ class FixScreenSizeConflict(Rule):
     """
     Certain release names contains a conflicting screen_size (e.g.: 720 without p). It confuses guessit: the guessed
     season and episode needs to be removed.
+    Bug: https://github.com/guessit-io/guessit/issues/308
 
     e.g.: "[SuperGroup].Show.Name.-.06.[720.Hi10p][1F5578AC]"
 
@@ -1663,6 +1664,7 @@ class ExpectedTitlePostProcessor(Rule):
 class FixMultipleTitles(Rule):
     """
     Probably a guessit bug, guessit might return more than one title instead of alternative_titles
+    bug: https://github.com/guessit-io/guessit/issues/309
 
     e.g.: /shows/Show.Name.S01E05.WEBRip.x264-GROUP__gYDfLA/Show.Name.S01E05.WEBRip.x264-GROUP
 

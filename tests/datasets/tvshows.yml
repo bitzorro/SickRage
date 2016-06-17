@@ -1756,13 +1756,12 @@
   type: episode
 
 # Corner Case: Additional implicit episode
+# https://github.com/guessit-io/guessit/issues/311
 ? Show.Name.S03E21.22.FASTSUB.VOSTFR.HDTV.XviD.GROUP
 : title: Show Name
   season: 3
   episode: [21, 22]
-  subtitle_language: 
-    - fa # not a big issue now
-    - fr
+  subtitle_language: fr
   format: HDTV
   video_codec: XviD
   other: Fastsub
@@ -1881,6 +1880,7 @@
   type: episode
 
 # corner case
+# https://github.com/guessit-io/guessit/issues/295
 ? Show.Name.S6.Ep5.X265.Dolby.2.0.KTM3
 : title: Show Name
   season: 6
@@ -2013,13 +2013,12 @@
   format: HDTV
   type: episode
 
-? How.I.Met.Your.Mother.COMPLETE.SERIES.DVDRip.XviD-AR
-: title: How I Met Your Mother
+? Show.Name.COMPLETE.SERIES.DVDRip.XviD-AR
+: title: Show Name
   other: Complete
   format: DVD
   video_codec: XviD
   release_group: AR
   type: episode
-
 
 

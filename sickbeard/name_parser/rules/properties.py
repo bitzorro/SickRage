@@ -11,7 +11,11 @@ from rebulk.rebulk import Rebulk
 
 
 def mux_format():
-
+    """
+    Guessit issue: https://github.com/guessit-io/guessit/issues/307
+    TODO: Remove it when fixed
+    :return:
+    """
     rebulk = Rebulk().regex_defaults(flags=re.IGNORECASE, abbreviations=[dash])
     rebulk.defaults(name='format')
     rebulk.regex('HDTV-?Mux', value='HDTV')
