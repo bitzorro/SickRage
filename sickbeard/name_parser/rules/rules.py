@@ -1774,7 +1774,7 @@ class ReleaseGroupPostProcessor(Rule):
         re.compile(r'\W*\bre\-?enc\b\W*', flags=re.IGNORECASE),
 
         # NLSubs-word
-        re.compile(r'\W*\b([a-z]{2})(subs)\b\W*', flags=re.IGNORECASE),
+        re.compile(r'\W*\b([a-z]{2,3})(subs?)\b\W*', flags=re.IGNORECASE),
 
         # word.rar, word.gz
         re.compile(r'\.((rar)|(gz)|(\d+))$', flags=re.IGNORECASE),
@@ -1787,13 +1787,15 @@ class ReleaseGroupPostProcessor(Rule):
 
         # https://github.com/guessit-io/guessit/issues/302
         # INTERNAL
-        re.compile(r'\W*\b((internal)|(obfuscated)|(vtv)|(sd)|(avc))\b\W*', flags=re.IGNORECASE),
+        re.compile(r'\W*\b(internal|obfuscated|vtv|sd|avc|dirfix|dual)\b\W*', flags=re.IGNORECASE),
 
         # ...word
         re.compile(r'^\W+', flags=re.IGNORECASE),
 
         # word[.
         re.compile(r'\W+$', flags=re.IGNORECASE),
+
+        re.compile(r'\s+', flags=re.IGNORECASE),
     ]
 
     def when(self, matches, context):
@@ -1810,7 +1812,7 @@ class ReleaseGroupPostProcessor(Rule):
         for release_group in release_groups:
             value = release_group.value
             for regex in self.regexes:
-                value = regex.sub('', value)
+                value = regex.sub(' ', value).strip()
                 if not value:
                     break
 
@@ -1818,7 +1820,7 @@ class ReleaseGroupPostProcessor(Rule):
                 to_remove.append(release_group)
             if release_group.value != value:
                 new_release_group = copy.copy(release_group)
-                new_release_group.value = value
+                new_release_group.value = cleanup(value)
                 to_remove.append(release_group)
                 to_append.append(new_release_group)
 
