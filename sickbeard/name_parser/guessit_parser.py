@@ -25,12 +25,6 @@ class GuessitNameParser(object):
         # https://github.com/guessit-io/guessit/issues/298
         # guessit identifies as website
         r're:(?<![^/\\])\w+ Net\b',
-
-        # guessit confuses Pan with language Panjabi
-        r're:\bPan de Peace\b!',
-
-        # guessit gives: "subtitle_language": "Oromo"  and it skips the title
-        r're:(?<![^/\\])Storm Chasers\b',
     }
 
     # release group exception list
@@ -49,21 +43,23 @@ class GuessitNameParser(object):
         r're:\bRiPRG\b',
         r're:\bTV2LAX9\b',
 
-        # https://github.com/guessit-io/guessit/issues/296
-        # guessit uses these endings as safe sub-domains
-        r're:\bAF$',
-        r're:\bAR$',
-        r're:\bCS$',
-        r're:\bDR$',
-        r're:\bMC$',
-        r're:\bNA$',
-        r're:\bNL$',
-        r're:\bTL$',
-        r're:\bYT$',
-        r're:\bZT$',
-
         # in conjunction with rule: SpanishNewpctReleaseName
         r're:\bNEWPCT\b',
+    }
+
+    allowed_languages = {
+        'de',
+        'en',
+        'es',
+        'fr',
+        'it',
+        'pt',
+        'sv',
+    }
+
+    allowed_countries = {
+        'us',
+        'uk',
     }
 
     def guess(self, name, show_type=None):
@@ -78,7 +74,8 @@ class GuessitNameParser(object):
         :rtype: dict
         """
         options = dict(type='episode', implicit=True, expected_title=self.expected_titles, show_type=show_type,
-                       expected_group=self.expected_groups, episode_prefer_number=show_type == 'anime')
+                       expected_group=self.expected_groups, episode_prefer_number=show_type == 'anime',
+                       allowed_languages=self.allowed_languages, allowed_countries=self.allowed_countries)
         return guessit.guessit(name, options=options)
 
     def parse(self, name, show_type=None):

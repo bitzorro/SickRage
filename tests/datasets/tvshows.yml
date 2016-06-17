@@ -359,10 +359,9 @@
   absolute_episode: 445
   screen_size: 720p
   subtitle_language: fr
-  country: MQ # not a big issue
 # TODO: Fix
 #  release_group: Resistance
-  release_group: version
+  release_group: version MQ
   type: episode
 
 
@@ -388,7 +387,6 @@
   release_group: Z-Team
   audio_codec: AAC
   container: MP4
-  country: PW # not a big issue
   type: episode
 
 # anime_french_fansub
@@ -932,7 +930,6 @@
 : title: Show Name
   video_codec: h264
   release_group: AF
-  language: af # not a big issue
   type: episode
 
 # expected_group
@@ -940,7 +937,6 @@
 : title: Show Name
   video_codec: h264
   release_group: AR
-  language: ar # not a big issue
   type: episode
 
 # expected_group
@@ -948,7 +944,6 @@
 : title: Show Name
   video_codec: h264
   release_group: CS
-  language: cs # not a big issue
   type: episode
 
 # expected_group
@@ -963,7 +958,6 @@
 : title: Show Name
   video_codec: h264
   release_group: MC
-  country: MC # not a big issue
   type: episode
 
 # expected_group
@@ -971,7 +965,6 @@
 : title: Show Name
   video_codec: h264
   release_group: NA
-  language: na # not a big issue
   type: episode
 
 # expected_group
@@ -979,7 +972,6 @@
 : title: Show Name
   video_codec: h264
   release_group: NL
-  language: nl # not a big issue
   type: episode
 
 # expected_group
@@ -987,7 +979,6 @@
 : title: Show Name
   video_codec: h264
   release_group: TL
-  language: tl # not a big issue
   type: episode
 
 # expected_group
@@ -995,7 +986,6 @@
 : title: Show Name
   video_codec: h264
   release_group: YT
-  country: YT # not a big issue
   type: episode
 
 # expected_group
@@ -1705,9 +1695,7 @@
 : title: Show Name
   season: 3
   episode: 19
-  subtitle_language:
-    - fa # guessit issue, not a big thing
-    - fr
+  subtitle_language: fr
   other: Fastsub
   format: HDTV
   video_codec: XviD
@@ -2082,4 +2070,43 @@
   format: WEB-DL
   release_group: Pir8
   type: episode
+
+? Mellan.Bleke.Och.Storm.SWEDiSH.720p.HDTV.x264-GROUP
+: title: Mellan Bleke Och Storm
+  language: sv
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  release_group: GROUP
+  type: episode
+
+? Show.Name.1999.1080p.HDTV.x264_HDv_0day_Team.mkv
+: title: Show Name
+  year: 1999
+  screen_size: 1080p
+  format: HDTV
+  video_codec: h264
+  release_group: HDv_0day_Team
+  container: mkv
+  mimetype: video/x-matroska
+  type: episode
+
+? 500.Bus.Stops.Series.1.XviD.hdtv.x264
+: title: 500 Bus Stops
+  season: 1
+  video_codec: [XviD, h264]
+  format: HDTV
+  type: episode
+  disabled: true # work in progress
+
+? How.I.Met.Your.Mother.COMPLETE.SERIES.DVDRip.XviD-AR
+: title: How I Met Your Mother
+  other: Complete
+  format: DVD
+  video_codec: XviD
+  release_group: AR
+  type: episode
+  disabled: true # work in progress
+
+
 
