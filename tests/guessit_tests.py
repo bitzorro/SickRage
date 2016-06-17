@@ -5,13 +5,45 @@ Guessit name parser tests
 import os
 import unittest
 import yaml
+from yaml.constructor import ConstructorError
+from yaml.nodes import MappingNode, SequenceNode
 
-from guessit.yamlutils import OrderedDictYAMLLoader
 from nose_parameterized import parameterized
 from sickbeard.name_parser.guessit_parser import parser
 
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+
+def construct_mapping(self, node, deep=False):
+    """
+    Custom yaml map constructor to allow lists to be key of a map
+    :param self:
+    :param node:
+    :param deep:
+    :return:
+    """
+    if not isinstance(node, MappingNode):
+        raise ConstructorError(None, None,
+                               "expected a mapping node, but found %s" % node.id,
+                               node.start_mark)
+    mapping = {}
+    for key_node, value_node in node.value:
+        is_sequence = isinstance(key_node, SequenceNode)
+        key = self.construct_object(key_node, deep=deep or is_sequence)
+        try:
+            if is_sequence:
+                key = tuple(key)
+            hash(key)
+        except TypeError, exc:
+            raise ConstructorError("while constructing a mapping", node.start_mark,
+                                   "found unacceptable key (%s)" % exc, key_node.start_mark)
+        value = self.construct_object(value_node, deep=deep)
+        mapping[key] = value
+    return mapping
+
+
+yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:map', construct_mapping)
 
 
 class GuessitTests(unittest.TestCase):
@@ -23,13 +55,19 @@ class GuessitTests(unittest.TestCase):
     }
 
     parameters = []
+
     for scenario_name, file_name in files.iteritems():
         with open(os.path.join(__location__, 'datasets', file_name), 'r') as stream:
-            data = yaml.load(stream, OrderedDictYAMLLoader)
+            data = yaml.safe_load(stream)
 
-        for release_name, expected in data.iteritems():
+        for release_names, expected in data.iteritems():
             expected = {k: v for k, v in expected.iteritems()}
-            parameters.append([scenario_name, release_name, expected])
+
+            if not isinstance(release_names, tuple):
+                release_names = (release_names, )
+
+            for release_name in release_names:
+                parameters.append([scenario_name, release_name, expected])
 
     @parameterized.expand(parameters)
     def test_guess(self, scenario_name, release_name, expected):

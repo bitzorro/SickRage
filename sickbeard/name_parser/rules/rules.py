@@ -171,13 +171,13 @@ class SpanishNewpctReleaseName(Rule):
         if not season:
             return
 
-        alternative_title = matches.named('alternative_title', index=0, predicate=
+        alternative_titles = matches.named('alternative_title', predicate=
                                           lambda match: match.value.lower() in self.season_words)
-        episode_title = matches.named('episode_title', index=0, predicate=
+        episode_titles = matches.named('episode_title', predicate=
                                       lambda match: match.value.lower() in self.season_words)
 
         # skip if there isn't an alternative_title or episode_title with the word season in spanish
-        if not alternative_title and not episode_title:
+        if not alternative_titles and not episode_titles:
             return
 
         # retrieve all groups
@@ -195,6 +195,11 @@ class SpanishNewpctReleaseName(Rule):
                 to_remove = []
                 to_append = []
 
+                # remove the wrong alternative title
+                to_remove.extend(alternative_titles)
+                # remove the wrong episode title
+                to_remove.extend(episode_titles)
+                to_remove.extend(matches.named('episode_title', predicate=lambda match: match.value.lower() == 'audio'))
                 # remove all episode matches, since we're rebuild them
                 to_remove.extend(matches.named('episode'))
 
@@ -219,18 +224,6 @@ class SpanishNewpctReleaseName(Rule):
                             new_episode.start = start_index + len(g['episode']) + len(g['end_season']) + 1
                             new_episode.end = new_episode.start + len(g['end_episode'])
                         to_append.append(new_episode)
-
-                # sometimes, there's a wrong alternative title...
-                if alternative_title:
-                    # remove the wrong alternative title
-                    to_remove.append(alternative_title)
-
-                # sometimes, there's a wrong episode title...
-                if episode_title:
-                    # remove the wrong episode title
-                    to_remove.append(episode_title)
-
-                to_remove.extend(matches.named('episode_title', predicate=lambda match: match.value.lower() == 'audio'))
 
                 return to_remove, to_append
 

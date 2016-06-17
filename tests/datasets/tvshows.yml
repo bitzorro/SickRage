@@ -721,7 +721,9 @@
   type: episode
 
 # ExpectedTitlePostProcessor
-? Show.Net.S01E06.720p
+? - Show.Net.S01E06.720p
+  - /Show.Net/Season 1/Show.Net.S01E06.720p
+  - /Show Net/Season 1/Show.Net.S01E06.720p
 : title: Show Net
   season: 1
   episode: 6
@@ -729,16 +731,8 @@
   type: episode
 
 # ExpectedTitlePostProcessor
-? /Show.Net/Season 1/Show.Net.S01E06.720p
-: title: Show Net
-  season: 1
-  episode: 6
-  screen_size: 720p
-  type: episode
-
-
-# ExpectedTitlePostProcessor
-? 11.22.63.S01E06.720p
+? - 11.22.63.S01E06.720p
+  - /11.22.63/Season 1/11.22.63.S01E06.720p
 : title: 11.22.63
   season: 1
   episode: 6
@@ -746,24 +740,8 @@
   type: episode
 
 # ExpectedTitlePostProcessor
-? /11.22.63/Season 1/11.22.63.S01E06.720p
-: title: 11.22.63
-  season: 1
-  episode: 6
-  screen_size: 720p
-  type: episode
-
-# ExpectedTitlePostProcessor
-? 11.22.63.106.hdtv-abc
-: title: 11.22.63
-  season: 1
-  episode: 6
-  format: HDTV
-  release_group: abc
-  type: episode
-
-# ExpectedTitlePostProcessor
-? /11.22.63/Season 1/11.22.63.106.hdtv-abc
+? - 11.22.63.106.hdtv-abc
+  - /11.22.63/Season 1/11.22.63.106.hdtv-abc
 : title: 11.22.63
   season: 1
   episode: 6
@@ -772,66 +750,41 @@
   type: episode
 
 # expected_title
-? 12.monkeys.Season.1.Complete
+? - 12.monkeys.Season.1.Complete
+  - /somefolder/12.monkeys.Season.1.Complete
+  - /12 Monkeys/12.monkeys.Season.1.Complete
 : title: 12 monkeys
   season: 1
   other: Complete
   type: episode
 
 # expected_title
-? /somefolder/12.monkeys.Season.1.Complete
-: title: 12 monkeys
-  season: 1
-  other: Complete
-  type: episode
-
-# expected_title
-? The.100.Season.1.Complete
+? - The.100.Season.1.Complete
+  - /somefolder/The.100.Season.1.Complete
+  - /The 100/The.100.Season.1.Complete
+  - /The.100.Season.1.Complete/The.100.Season.1.Complete
 : title: The 100
   season: 1
   other: Complete
   type: episode
 
 # expected_title
-? /somefolder/The.100.Season.1.Complete
-: title: The 100
-  season: 1
-  other: Complete
-  type: episode
-
-# expected_title
-? Storm.Chasers.Season.1
+? - Storm.Chasers.Season.1
+  - /somefolder/Storm.Chasers.Season.1
 : title: Storm Chasers
   season: 1
   type: episode
 
 # expected_title
-? /somefolder/Storm.Chasers.Season.1
-: title: Storm Chasers
-  season: 1
-  type: episode
-
-# expected_title
-? 60.Minutes.-.2008.01.06
+? - 60.Minutes.-.2008.01.06
+  - /somefolder/60.Minutes.-.2008.01.06
 : title: 60 Minutes
   date: 2008-01-06
   type: episode
 
 # expected_title
-? /somefolder/60.Minutes.-.2008.01.06
-: title: 60 Minutes
-  date: 2008-01-06
-  type: episode
-
-# expected_title
-? Star.Trek.DS9.S01E03
-: title: Star Trek DS9
-  season: 1
-  episode: 3
-  type: episode
-
-# expected_title
-? /Star.Trek/Season 01/Star.Trek.DS9.S01E03
+? - Star.Trek.DS9.S01E03
+  - /Star.Trek/Season 01/Star.Trek.DS9.S01E03
 : title: Star Trek DS9
   season: 1
   episode: 3
@@ -996,19 +949,10 @@
   type: episode
 
 # CreateExtendedTitleWithCountryOrYear (Country)
-? Show.Name.US.S03.720p.BluRay.x264-SuperGroup
-: title: Show Name
-  extended_title: Show Name US
-  country: US
-  season: 3
-  screen_size: 720p
-  format: BluRay
-  video_codec: h264
-  release_group: SuperGroup
-  type: episode
-
-# CreateExtendedTitleWithCountryOrYear (Country)
-? /Show.Name/Show.Name.US.S03.720p.BluRay.x264-SuperGroup
+? - Show.Name.US.S03.720p.BluRay.x264-SuperGroup
+  - /Show.Name/Show.Name.US.S03.720p.BluRay.x264-SuperGroup
+  - /Show Name - US/Season 3/Show.Name.US.S03.720p.BluRay.x264-SuperGroup
+  - /Show Name/Season 3/Show.Name.US.S03.720p.BluRay.x264-SuperGroup
 : title: Show Name
   extended_title: Show Name US
   country: US
@@ -1124,15 +1068,9 @@
   type: episode
 
 # AnimeWithSeasonAbsoluteEpisodeNumbers
-? "[Group].Show.Name.S2.-.19.[1080p]"
-: title: Show Name S2
-  absolute_episode: 19
-  screen_size: 1080p
-  release_group: Group
-  type: episode
-
-# AnimeWithSeasonAbsoluteEpisodeNumbers
-? /Show.Name.S2/[Group].Show.Name.S2.-.19.[1080p]
+? - "[Group].Show.Name.S2.-.19.[1080p]"
+  - /Show.Name.S2/[Group].Show.Name.S2.-.19.[1080p]
+  - /Show Name S2/[Group].Show.Name.S2.-.19.[1080p]
 : title: Show Name S2
   absolute_episode: 19
   screen_size: 1080p
@@ -1267,17 +1205,9 @@
   type: episode
 
 # FixSeasonEpisodeDetection
-? Some.Show.S02E14.X264.1080p.HDTV
-: title: Some Show
-  season: 2
-  episode: 14
-  video_codec: h264
-  screen_size: 1080p
-  format: HDTV
-  type: episode
-
-# FixSeasonEpisodeDetection
-? /Some.Show.S02E14.X264.1080p.HDTV/Some.Show.S02E14.X264.1080p.HDTV
+? - Some.Show.S02E14.X264.1080p.HDTV
+  - /Some.Show.S02E14.X264.1080p.HDTV/Some.Show.S02E14.X264.1080p.HDTV
+  - /Some Show/Season 2/Some.Show.S02E14.X264.1080p.HDTV
 : title: Some Show
   season: 2
   episode: 14
@@ -1316,20 +1246,9 @@
   type: episode
 
 # FixWrongSeasonAndReleaseGroup
-? Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
-: title: Show Name
-  season: 6
-  episode: 4
-  screen_size: 1080i
-  format: HDTV
-  audio_codec: DolbyDigital
-  audio_channels: '5.1'
-  video_codec: h264
-  release_group: BS666
-  type: episode
-
-# FixWrongSeasonAndReleaseGroup
-? /Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666/Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
+? - Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
+  - /Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666/Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
+  - /Show Name/Season 6/Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
 : title: Show Name
   season: 6
   episode: 4
@@ -1386,7 +1305,8 @@
   type: episode
 
 # FixSeasonRangeDetection (negative scenario - not a season range)
-? /show name s01-s04/show name s01E03
+? - /show name/s01-s04/show name s01E03
+  - /show name s01-s04/show name s01E03
 : title: show name
   season: 1
   episode: 3
@@ -1652,17 +1572,9 @@
   disabled: true # to be fixed
 
 # CreateExtendedTitleWithAlternativeTitles (separated by +)
-? "[SuperGroup].Show.Name.-.Still+Name.-.11.[1080p]"
-: title: Show Name
-  alternative_title: [Still, Name]
-  extended_title: "Show Name - Still+Name"
-  absolute_episode: 11
-  screen_size: 1080p
-  release_group: SuperGroup
-  type: episode
-
-# CreateExtendedTitleWithAlternativeTitles (separated by +)
-? /Shows/Show Name/[SuperGroup].Show.Name.-.Still+Name.-.11.[1080p]
+? - "[SuperGroup].Show.Name.-.Still+Name.-.11.[1080p]"
+  - /Shows/Show Name - Still+Name/[SuperGroup].Show.Name.-.Still+Name.-.11.[1080p]
+  - /Shows/Show Name/[SuperGroup].Show.Name.-.Still+Name.-.11.[1080p]
 : title: Show Name
   alternative_title: [Still, Name]
   extended_title: "Show Name - Still+Name"
@@ -1882,19 +1794,9 @@
   type: episode
 
 # SpanishNewpctReleaseName - season and episode:
-? Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
-: title: Show Name
-  season: 1
-  episode: 2
-  screen_size: 720p
-  format: HDTV
-  video_codec: h264
-  language: es
-  release_group: NEWPCT
-  type: episode
-
-# SpanishNewpctReleaseName - season and episode:
-? /Show Name/Season 01/Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
+? - Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
+  - /Show Name/Season 01/Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
+  - /Show Name/Temporada 01/Show.Name.-.Temporada.1.720p.HDTV.x264[Cap.102]SPANISH.AUDIO-NEWPCT
 : title: Show Name
   season: 1
   episode: 2
@@ -1990,7 +1892,8 @@
   disabled: true # is it important?
 
 # FixMultipleTitles
-? /shows/Show.Name.S01E05.WEBRip.x264-GROUP__gYDfLA/Show.Name.S01E05.WEBRip.x264-GROUP"
+? - Show.Name.S01E05.WEBRip.x264-GROUP
+  - /folder/Show.Name.S01E05.WEBRip.x264-GROUP__gYDfLA/Show.Name.S01E05.WEBRip.x264-GROUP"
 : title: Show Name
   season: 1
   episode: 5
