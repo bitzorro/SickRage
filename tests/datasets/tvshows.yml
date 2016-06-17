@@ -2005,10 +2005,11 @@
   mimetype: video/x-matroska
   type: episode
 
+# Important: the suffix .hdtv.x264 is an existing workaround in the application for a certain provider. It should be removed when there's a video_codec conflict
 ? 500.Bus.Stops.Series.1.XviD.hdtv.x264
 : title: 500 Bus Stops
   season: 1
-  video_codec: [XviD, h264]
+  video_codec: XviD
   format: HDTV
   type: episode
   disabled: true # work in progress
@@ -2020,7 +2021,6 @@
   video_codec: XviD
   release_group: AR
   type: episode
-  disabled: true # work in progress
 
 
 

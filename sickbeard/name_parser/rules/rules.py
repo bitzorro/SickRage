@@ -21,7 +21,7 @@ Rebulk API is really powerful. It's always good to spend some time reading about
 The main idea about the rules in this section is to navigate between the `matches` and `holes` and change the matches
 according to our needs
 
-* Our rules should run only after all standard and defaul guessit rules have finished (not before that!).
+* Our rules should run only after all standard and default guessit rules have finished (not before that!).
 ** Adding several dependencies to our rules will make an implicit execution order. It could be hard to debug. Better to
 have a fixed execution order, that's why the rules() method should add the rules in the correct order (explicit).
 *** Rebulk API relies on the match.value, if you change them you'll get exceptions
@@ -617,6 +617,78 @@ class CreateExtendedTitleWithCountryOrYear(Rule):
                 extended_title.end = after_title.end
                 extended_title.raw_end = after_title.raw_end
                 return extended_title
+
+
+class FixWrongTitlesWithCompleteKeyword(Rule):
+    """
+    Guessit bug: https://github.com/guessit-io/guessit/issues/310
+
+    e.g.: Show.Name.COMPLETE.SERIES.DVDRip.XviD-GROUP
+
+    guessit -t episode "Show.Name.COMPLETE.SERIES.DVDRip.XviD-GROUP"
+
+    without this fix:
+        For: Show.Name.COMPLETE.SERIES.DVDRip.XviD-GROUP
+        GuessIt found: {
+            "title": "Show Name COMPLETE SERIES",
+            "format": "DVD",
+            "video_codec": "XviD",
+            "release_group": "GROUP",
+            "type": "episode"
+        }
+
+    with this fix:
+        For: Show.Name.COMPLETE.SERIES.DVDRip.XviD-GROUP
+        GuessIt found: {
+            "title": "Show Name",
+            "other": "Complete",
+            "format": "DVD",
+            "video_codec": "XviD",
+            "release_group": "GROUP",
+            "type": "episode"
+        }
+    """
+    priority = POST_PROCESS
+    consequence = [RemoveMatch, AppendMatch]
+    complete_re = re.compile(r'\W+complete(\W+(series|season))?\W*$', flags=re.IGNORECASE)
+
+    def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
+        to_remove = []
+        to_append = []
+
+        titles = []
+        titles.extend(matches.named('title'))
+        titles.extend(matches.named('alternative_title'))
+        titles.extend(matches.named('episode_titles'))
+
+        for title in titles:
+            m = self.complete_re.search(title.raw)
+            if not m:
+                continue
+
+            new_title = copy.copy(title)
+            new_title.value = cleanup(title.raw[:m.start()])
+            new_title.end = m.start()
+
+            other = copy.copy(title)
+            other.name = 'other'
+            other.value = 'Complete'
+            other.tags = []
+            other.start = m.start()
+            other.end = m.end()
+
+            to_remove.append(title)
+            to_append.append(new_title)
+            to_append.append(other)
+
+        return to_remove, to_append
 
 
 class FixTitlesContainsNumber(Rule):
@@ -1716,6 +1788,7 @@ def rules():
         FixEpisodeRangeWithSeasonDetection,
         FixWrongEpisodeDetectionInSeasonRange,
         FixTitlesContainsNumber,
+        FixWrongTitlesWithCompleteKeyword,
         AnimeWithSeasonAbsoluteEpisodeNumbers,
         AnimeAbsoluteEpisodeNumbers,
         AbsoluteEpisodeNumbers,
