@@ -691,6 +691,71 @@ class FixWrongTitlesWithCompleteKeyword(Rule):
         return to_remove, to_append
 
 
+class FixTvChaosUkWorkaround(Rule):
+    """
+    Medusa adds .hdtv.x264 to tv chaos uk releases. The video_codec might conflict with existing video_codec in the
+    original release name.
+
+    e.g.: Show.Name.Season.1.XviD.hdtv.x264
+
+    guessit -t episode "Show.Name.Season.1.XviD.hdtv.x264"
+
+    without this fix:
+        For: Show.Name.Season.1.XviD.hdtv.x264
+        GuessIt found: {
+            "title": "Show Name",
+            "season": 1,
+            "video_codec": [
+                "XviD",
+                "h264"
+            ],
+            "format": "HDTV",
+            "type": "episode"
+        }
+
+    with this fix:
+        For: Show.Name.Season.1.XviD.hdtv.x264
+        GuessIt found: {
+            "title": "Show Name",
+            "season": 1,
+            "video_codec": "XviD",
+            "format": "HDTV",
+            "type": "episode"
+        }
+    """
+    priority = POST_PROCESS
+    consequence = RemoveMatch
+
+    def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
+        to_remove = []
+
+        fileparts = matches.markers.named('path')
+        for filepart in fileparts:
+            video_codecs = matches.range(filepart.start, filepart.end, predicate=
+                                         lambda match: match.name == 'video_codec')
+            formats = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'format')
+            if len(video_codecs) != 2 or len(formats) != 1:
+                continue
+
+            m_x264 = video_codecs[-1]
+            m_hdtv = matches.previous(m_x264, index=0)
+
+            if m_x264.end != filepart.end or m_x264.value != 'h264' or m_hdtv.name != 'format' \
+                    or m_hdtv.value != 'HDTV':
+                continue
+
+            to_remove.append(m_x264)
+
+        return to_remove
+
+
 class FixTitlesContainsNumber(Rule):
     """
     There are shows where the title contains a number and the part after the number is incorrectly detected as
@@ -1774,6 +1839,7 @@ def rules():
     :rtype: Rebulk
     """
     return Rebulk().rules(
+        FixTvChaosUkWorkaround,
         FixMultipleTitles,
         FixAnimeReleaseGroup,
         SpanishNewpctReleaseName,

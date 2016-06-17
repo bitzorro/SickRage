@@ -18,6 +18,7 @@ class GuessitNameParser(object):
         # guessit gets confused because of the numbers (only in some special cases)
         # (?<![^/\\]) means -> it matches nothing but path separators  (negative lookbehind)
         r're:(?<![^/\\])12 Monkeys\b',
+        r're:(?<![^/\\])500 Bus Stops\b',
         r're:(?<![^/\\])60 Minutes\b',
         r're:(?<![^/\\])Star Trek DS9\b',
         r're:(?<![^/\\])The 100\b',
