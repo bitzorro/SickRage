@@ -49,6 +49,9 @@ class GuessitNameParser(object):
 
         # in conjunction with rule: SpanishNewpctReleaseName
         r're:\bNEWPCT\b',
+
+        # release groups taht starts with numbers
+        r're:\b4EVERHD\b',
     }
 
     allowed_languages = {
@@ -94,7 +97,7 @@ class GuessitNameParser(object):
         result = {
             'original_name': name,
             'series_name': guess.get('extended_title') or guess.get('title'),
-            'season_number': guess.get('season'),
+            'season_number': single_or_list(guess.get('season')),
             'release_group': guess.get('release_group'),
             'air_date': guess.get('date'),
             'version': guess.get('version', -1),
@@ -104,6 +107,10 @@ class GuessitNameParser(object):
         }
 
         return result
+
+
+def single_or_list(value):
+    return sorted(value) if isinstance(value, list) else value
 
 
 def ensure_list(value):

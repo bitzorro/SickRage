@@ -29,13 +29,14 @@ have a fixed execution order, that's why the rules() method should add the rules
 import copy
 import re
 
+from guessit.rules.common.comparators import marker_sorted
 from guessit.rules.common.formatters import cleanup
 from rebulk.processors import POST_PROCESS
 from rebulk.rebulk import Rebulk
 from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
 
 
-season_range_separator = ('-', '~', '_-_', '-s', '.to.s', '.to.')
+season_range_separator = ('-', '~', '_-_', '_-_s', '-s', '.to.s', '.to.')
 
 
 class FixAnimeReleaseGroup(Rule):
@@ -86,7 +87,7 @@ class FixAnimeReleaseGroup(Rule):
             return
 
         fileparts = matches.markers.named('path')
-        for filepart in fileparts:
+        for filepart in marker_sorted(fileparts, matches):
             # get the group (e.g.: [abc]) at the beginning of this filepart
             group = matches.markers.at_match(filepart, index=0, predicate=lambda marker: marker.name == 'group')
 
@@ -445,7 +446,7 @@ class FixWrongTitleDueToFilmTitle(Rule):
         to_rename_ep = []
 
         fileparts = matches.markers.named('path')
-        for filepart in fileparts:
+        for filepart in marker_sorted(fileparts, matches):
             film_title = matches.range(filepart.start, filepart.end, index=0, predicate=
                                        lambda match: match.name == 'film_title' and not match.raw.isdigit())
             if film_title:
@@ -756,7 +757,7 @@ class FixTvChaosUkWorkaround(Rule):
         to_remove = []
 
         fileparts = matches.markers.named('path')
-        for filepart in fileparts:
+        for filepart in marker_sorted(fileparts, matches):
             video_codecs = matches.range(filepart.start, filepart.end, predicate=
                                          lambda match: match.name == 'video_codec')
             formats = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'format')
@@ -1143,7 +1144,7 @@ class FixSeasonEpisodeDetection(Rule):
         to_rename = []
 
         fileparts = matches.markers.named('path')
-        for filepart in fileparts:
+        for filepart in marker_sorted(fileparts, matches):
             seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
             # bug happens when there are 2 seasons...
             if not seasons and len(seasons) != 2:
@@ -1290,7 +1291,7 @@ class FixWrongSeasonAndReleaseGroup(Rule):
         to_append = []
 
         fileparts = matches.markers.named('path')
-        for filepart in fileparts:
+        for filepart in marker_sorted(fileparts, matches):
             seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
             # only when there are 2 seasons
             last_season = seasons[-1] if len(seasons) == 2 else None
@@ -1363,7 +1364,7 @@ class FixSeasonRangeDetection(Rule):
         to_append = []
 
         fileparts = matches.markers.named('path')
-        for filepart in fileparts:
+        for filepart in marker_sorted(fileparts, matches):
             seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
             # only when there are 2 seasons
             start_season = seasons[0] if len(seasons) == 2 else None
@@ -1441,7 +1442,7 @@ class FixEpisodeRangeDetection(Rule):
         to_rename = []
 
         fileparts = matches.markers.named('path')
-        for filepart in fileparts:
+        for filepart in marker_sorted(fileparts, matches):
             episodes = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'episode')
 
             episode_count = matches.next(episodes[0], index=0) if len(episodes) == 1 else None
@@ -1525,7 +1526,7 @@ class FixEpisodeRangeWithSeasonDetection(Rule):
         to_append = []
 
         fileparts = matches.markers.named('path')
-        for filepart in fileparts:
+        for filepart in marker_sorted(fileparts, matches):
             seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
             # only when there are 2 seasons
             start_season = seasons[0] if len(seasons) == 2 else None
@@ -1625,7 +1626,7 @@ class FixWrongEpisodeDetectionInSeasonRange(Rule):
         to_remove = []
 
         fileparts = matches.markers.named('path')
-        for filepart in fileparts:
+        for filepart in marker_sorted(fileparts, matches):
             seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
             episodes = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'episode')
             # bug happens when there are more than 1 season and exactly 1 episode
@@ -1878,7 +1879,6 @@ def rules():
     """
     return Rebulk().rules(
         FixTvChaosUkWorkaround,
-        FixMultipleTitles,
         FixAnimeReleaseGroup,
         SpanishNewpctReleaseName,
         FixInvalidTitleOrAlternativeTitle,
@@ -1900,5 +1900,6 @@ def rules():
         ExpectedTitlePostProcessor,
         CreateExtendedTitleWithAlternativeTitles,
         CreateExtendedTitleWithCountryOrYear,
-        ReleaseGroupPostProcessor
+        ReleaseGroupPostProcessor,
+        FixMultipleTitles
     )
