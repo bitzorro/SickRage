@@ -172,9 +172,9 @@ class SpanishNewpctReleaseName(Rule):
             return
 
         alternative_titles = matches.named('alternative_title', predicate=
-                                          lambda match: match.value.lower() in self.season_words)
+                                           lambda match: match.value.lower() in self.season_words)
         episode_titles = matches.named('episode_title', predicate=
-                                      lambda match: match.value.lower() in self.season_words)
+                                       lambda match: match.value.lower() in self.season_words)
 
         # skip if there isn't an alternative_title or episode_title with the word season in spanish
         if not alternative_titles and not episode_titles:
@@ -429,7 +429,7 @@ class FixWrongTitleDueToFilmTitle(Rule):
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch, RenameMatch('title')]
-    blacklist = ('special', 'season')
+    blacklist = ('special', 'season', 'multi')
 
     def when(self, matches, context):
         """
@@ -439,43 +439,52 @@ class FixWrongTitleDueToFilmTitle(Rule):
         :type context: dict
         :return:
         """
-        title = matches.named('title', index=0)
-        film_title = matches.named('film_title', index=0)
-        # bug happens when there's a film_title
-        if title and film_title:
-            # and the next match is a film and the film is digit
-            film = matches.next(title, index=0)
-            if film and film.name == 'film':
-                holes = matches.holes(start=title.end, end=film.start)
-                f = holes[0] if len(holes) == 1 else None
-                # and the hole between title and film_title is an 'f'
-                if f and f.value.lower() == 'f' and film.raw.isdigit():
-                    to_remove = []
-                    to_append = []
-                    to_rename = []
+        to_remove = []
+        to_append = []
+        to_rename = []
 
-                    release_groups = matches.named('release_group')
-
-                    new_release_group = copy.copy(title)
-                    new_release_group.name = 'release_group'
-                    new_release_group.tags = []
-                    new_release_group.value = title.raw + f.value + film.raw
-                    new_release_group.end = film.end
-
-                    to_remove.append(film)
+        fileparts = matches.markers.named('path')
+        for filepart in fileparts:
+            film_title = matches.range(filepart.start, filepart.end, index=0, predicate=
+                                       lambda match: match.name == 'film_title' and not match.raw.isdigit())
+            if film_title:
+                title = matches.range(filepart.start, filepart.end,
+                                      predicate=lambda match: match.name == 'title', index=0)
+                if title and title.value.lower() in self.blacklist:
                     to_remove.append(title)
-                    to_remove.extend(release_groups)
-                    to_append.append(new_release_group)
                     to_rename.append(film_title)
-                    return to_remove, to_append, to_rename
+                else:
+                    to_rename.append(film_title)
 
-            # if the current title is in the blacklist, use the film_title
-            elif title.value.lower() in self.blacklist:
-                return [title], [], [film_title]
+            film = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'film', index=-1)
+            if not film or not film.raw.isdigit():
+                continue
 
-        # if there's no title and the film_title is not a digit, use it as a title
-        elif film_title and not film_title.raw.isdigit():
-            return [], [], [film_title]
+            previous = matches.previous(film, predicate=lambda match: match.start >= filepart.start, index=0)
+            if not previous:
+                continue
+
+            hole = matches.holes(previous.end, film.start, index=0)
+            if not hole or hole.value.lower() != 'f':
+                continue
+
+            new_property = copy.copy(previous)
+            new_property.value = cleanup(previous.raw + hole.value + film.raw)
+            new_property.end = film.end
+            if previous.name == 'title':
+                new_property.name = 'release_group'
+                new_property.tags = []
+
+            if previous.name != 'release_group':
+                release_groups = matches.range(filepart.start, filepart.end,
+                                               predicate=lambda match: match.name == 'release_group')
+                to_remove.extend(release_groups)
+            to_remove.append(film)
+            to_remove.append(previous)
+
+            to_append.append(new_property)
+
+        return to_remove, to_append, to_rename
 
 
 class CreateExtendedTitleWithAlternativeTitles(Rule):
@@ -533,6 +542,10 @@ class CreateExtendedTitleWithAlternativeTitles(Rule):
             return
 
         if matches.named('alternative_title', predicate=lambda match: match.value.lower() in self.blacklist):
+            return
+
+        # Do not concatenate the titles if it's not an anime and there are languages
+        if not matches.tagged('anime') and matches.named('language'):
             return
 
         previous = title

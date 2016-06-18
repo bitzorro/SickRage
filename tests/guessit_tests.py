@@ -79,11 +79,12 @@ class GuessitTests(unittest.TestCase):
         :param expected: the expected guessed dict
         :type expected: dict
         """
+        self.maxDiff = None
         options = expected.pop('options', {})
         actual = parser.guess(release_name, show_type=options.get('show_type'))
         actual = {k: v for k, v in actual.iteritems()}
 
-        def format(param):
+        def format_param(param):
             if isinstance(param, list):
                 result = []
                 for p in param:
@@ -93,11 +94,11 @@ class GuessitTests(unittest.TestCase):
             return str(param)
 
         if 'country' in actual:
-            actual['country'] = format(actual['country'])
+            actual['country'] = format_param(actual['country'])
         if 'language' in actual:
-            actual['language'] = format(actual['language'])
+            actual['language'] = format_param(actual['language'])
         if 'subtitle_language' in actual:
-            actual['subtitle_language'] = format(actual['subtitle_language'])
+            actual['subtitle_language'] = format_param(actual['subtitle_language'])
 
         expected['release_name'] = release_name
         actual['release_name'] = release_name

@@ -1245,6 +1245,16 @@
   release_group: Group
   type: episode
 
+? Show.Name.Season.1.-.720p.HDTV.x265.-.{Group}
+: title: Show Name
+  season: 1
+  screen_size: 720p
+  format: HDTV
+  video_codec: h265
+  release_group: Group
+  type: episode
+  disabled: true # work in progress
+
 # FixWrongSeasonAndReleaseGroup
 ? - Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
   - /Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666/Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
@@ -2021,4 +2031,39 @@
   release_group: AR
   type: episode
 
+? Il Trono Di Spade - Game Of Thrones S06e07 [Mux - H264 - Ita Eng Aac - Sub Ita Eng] DLMux by sp_54321
+: title: Il Trono Di Spade
+  alternative_title: Game Of Thrones
+  season: 6
+  episode: 7
+  video_codec: h264
+  language: [it, en]
+  audio_codec: AAC
+  subtitle_language: [it, en]
+  format: WEB-DL
+  release_group: sp_54321
+  type: episode
+
+? Show.Name.-.Alternative.-.02.(1280x720.HEVC.AAC)
+: title: Show Name
+  alternative_title: Alternative
+  extended_title: Show Name - Alternative
+  absolute_episode: 2
+  screen_size: 720p
+  video_codec: h265
+  audio_codec: AAC
+  type: episode
+
+? Fear.The.Walking.Dead.S02E01.MULTi.FRENCH.VOSTFR-EN.1080p.WEB-DL.HEVC.x265-GOLF68
+: title: Fear The Walking Dead
+  season: 2
+  episode: 1
+  language: [fr, en]
+  subtitle_language: fr
+  screen_size: 1080p
+  format: WEB-DL
+  video_codec: h265
+  release_group: GOLF68
+  type: episode
+  
 

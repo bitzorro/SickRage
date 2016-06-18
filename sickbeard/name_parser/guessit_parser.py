@@ -26,6 +26,9 @@ class GuessitNameParser(object):
         # https://github.com/guessit-io/guessit/issues/298
         # guessit identifies as website
         r're:(?<![^/\\])\w+ Net\b',
+
+        # guessit: conflicts with italian language
+        r're:(?<![^/\\])\w+ it\b',
     }
 
     # release group exception list
