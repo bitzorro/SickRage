@@ -154,7 +154,7 @@ class SpanishNewpctReleaseName(Rule):
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
-    season_words = ('temporada', 'temp', 'tem')
+    season_re = re.compile(r'^tem(p|porada)?\W*\d*$', flags=re.IGNORECASE)
     prefix = '[cap.'
     episode_re = re.compile(r'^\[cap\.(?P<season>\d{1,2})(?P<episode>\d{2})'
                             r'(_((?P<end_season>\d{1,2})(?P<end_episode>\d{2})))?.*\]', flags=re.IGNORECASE)
@@ -172,9 +172,9 @@ class SpanishNewpctReleaseName(Rule):
             return
 
         alternative_titles = matches.named('alternative_title', predicate=
-                                           lambda match: match.value.lower() in self.season_words)
+                                           lambda match: self.season_re.match(match.value.lower()))
         episode_titles = matches.named('episode_title', predicate=
-                                       lambda match: match.value.lower() in self.season_words)
+                                       lambda match: self.season_re.match(match.value.lower()))
 
         # skip if there isn't an alternative_title or episode_title with the word season in spanish
         if not alternative_titles and not episode_titles:
@@ -428,7 +428,7 @@ class FixWrongTitleDueToFilmTitle(Rule):
         }
     """
     priority = POST_PROCESS
-    consequence = [RemoveMatch, AppendMatch, RenameMatch('title')]
+    consequence = [RemoveMatch, AppendMatch, RenameMatch('title'), RenameMatch('episode')]
     blacklist = ('special', 'season', 'multi')
 
     def when(self, matches, context):
@@ -442,6 +442,7 @@ class FixWrongTitleDueToFilmTitle(Rule):
         to_remove = []
         to_append = []
         to_rename = []
+        to_rename_ep = []
 
         fileparts = matches.markers.named('path')
         for filepart in fileparts:
@@ -450,11 +451,15 @@ class FixWrongTitleDueToFilmTitle(Rule):
             if film_title:
                 title = matches.range(filepart.start, filepart.end,
                                       predicate=lambda match: match.name == 'title', index=0)
-                if title and title.value.lower() in self.blacklist:
-                    to_remove.append(title)
-                    to_rename.append(film_title)
-                else:
-                    to_rename.append(film_title)
+
+                if title:
+                    if title.value.lower() in self.blacklist:
+                        to_remove.append(title)
+                    if title.value.isdigit() and matches.previous(title, predicate=lambda m: m.name == 'episode'):
+                        title.value = int(title.value)
+                        to_rename_ep.append(title)
+
+                to_rename.append(film_title)
 
             film = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'film', index=-1)
             if not film or not film.raw.isdigit():
@@ -464,6 +469,7 @@ class FixWrongTitleDueToFilmTitle(Rule):
             if not previous:
                 continue
 
+            to_remove.append(film)
             hole = matches.holes(previous.end, film.start, index=0)
             if not hole or hole.value.lower() != 'f':
                 continue
@@ -479,12 +485,11 @@ class FixWrongTitleDueToFilmTitle(Rule):
                 release_groups = matches.range(filepart.start, filepart.end,
                                                predicate=lambda match: match.name == 'release_group')
                 to_remove.extend(release_groups)
-            to_remove.append(film)
             to_remove.append(previous)
 
             to_append.append(new_property)
 
-        return to_remove, to_append, to_rename
+        return to_remove, to_append, to_rename, to_rename_ep
 
 
 class CreateExtendedTitleWithAlternativeTitles(Rule):
@@ -1192,7 +1197,8 @@ class FixSeasonNotDetected(Rule):
         }
     """
     priority = POST_PROCESS
-    consequence = [RemoveMatch, RenameMatch('season')]
+    season_re = re.compile(r'\bseason\W*$', flags=re.IGNORECASE)
+    consequence = [RemoveMatch, AppendMatch, RenameMatch('season')]
 
     def when(self, matches, context):
         """
@@ -1202,10 +1208,25 @@ class FixSeasonNotDetected(Rule):
         :type context: dict
         :return:
         """
-        episode = matches.named('episode', index=0)
-        season = matches.previous(episode, index=-1) if episode else None
-        if season and season.name == 'alternative_title' and season.value.lower() == 'season':
-            return season, episode
+        to_remove = []
+        to_append = []
+        to_rename = []
+
+        episodes = matches.named('episode')
+        for episode in episodes:
+            previous = matches.previous(episode, index=0)
+            m = self.season_re.search(previous.raw) if previous else None
+            if m and not matches.holes(previous.end, episode.start, index=0):
+                new_value = cleanup(previous.raw[:m.start()])
+                if new_value:
+                    new_match = copy.copy(previous)
+                    new_match.value = new_value
+                    new_match.end = m.start()
+                    to_append.append(new_match)
+                to_remove.append(previous)
+                to_rename.append(episode)
+
+        return to_remove, to_append, to_rename
 
 
 class FixWrongSeasonAndReleaseGroup(Rule):

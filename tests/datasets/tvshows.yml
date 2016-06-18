@@ -817,7 +817,6 @@
 : title: Show Name
   video_codec: h264
   release_group: F4ST3R
-  film: 4 # not a big issue
   type: episode
 
 # expected_group
@@ -825,7 +824,6 @@
 : title: Show Name
   video_codec: h264
   release_group: F4ST
-  film: 4 # not a big issue
   type: episode
 
 # expected_group
@@ -1245,6 +1243,7 @@
   release_group: Group
   type: episode
 
+# FixSeasonNotDetected
 ? Show.Name.Season.1.-.720p.HDTV.x265.-.{Group}
 : title: Show Name
   season: 1
@@ -1253,7 +1252,6 @@
   video_codec: h265
   release_group: Group
   type: episode
-  disabled: true # work in progress
 
 # FixWrongSeasonAndReleaseGroup
 ? - Show.Name.S06E04.1080i.HDTV.DD5.1.H264.BS666
@@ -1514,7 +1512,6 @@
   season: 2 
   episode: 5
   episode_details: Special
-  film: 1 # not a big issue right now
   screen_size: 720p
   format: HDTV
   video_codec: h264
@@ -1633,7 +1630,6 @@
   format: HDTV
   video_codec: XviD
   release_group: F4ST
-  film: 4 # guessit issue, not a big thing
   type: episode
 
 # Corner case: episode range
@@ -1790,7 +1786,6 @@
   release_group: C4TV
   language: en
   episode_details: Special
-  film: 1 # not a big issue#
   type: episode
 
 # Title dots should be kept
@@ -1814,6 +1809,15 @@
   video_codec: h264
   language: es
   release_group: NEWPCT
+  type: episode
+
+# SpanishNewpctReleaseName
+? Show.Name.-.Temporada1.[HDTV][Cap.105][Español.Castellano]
+: title: Show Name
+  format: HDTV
+  season: 1
+  episode: 5
+  language: es
   type: episode
 
 # SpanishNewpctReleaseName - season and episode with range:
@@ -2054,8 +2058,8 @@
   audio_codec: AAC
   type: episode
 
-? Fear.The.Walking.Dead.S02E01.MULTi.FRENCH.VOSTFR-EN.1080p.WEB-DL.HEVC.x265-GOLF68
-: title: Fear The Walking Dead
+? Show.Name.S02E01.MULTi.FRENCH.VOSTFR-EN.1080p.WEB-DL.HEVC.x265-GOLF68
+: title: Show Name
   season: 2
   episode: 1
   language: [fr, en]
@@ -2065,5 +2069,17 @@
   video_codec: h265
   release_group: GOLF68
   type: episode
-  
+
+? Show.Name.S03E21.22.FASTSUB.VOSTFR.HDTV.XviD.F4ST.avi
+: title: Show Name
+  season: 3
+  episode: [21, 22]
+  other: Fastsub
+  subtitle_language: fr
+  format: HDTV
+  video_codec: XviD
+  release_group: F4ST
+  container: avi
+  mimetype: video/x-msvideo
+  type: episode
 

@@ -104,9 +104,9 @@ class GuessitTests(unittest.TestCase):
         actual['release_name'] = release_name
 
         if expected.get('disabled'):
-            print('Skipping {scenario}: {release_name}'.format(scenario=scenario_name, release_name=release_name))
+            print(u'Skipping {scenario}: {release_name}'.format(scenario=scenario_name, release_name=release_name))
         else:
-            print('Testing {scenario}: {release_name}'.format(scenario=scenario_name, release_name=release_name))
+            print(u'Testing {scenario}: {release_name}'.format(scenario=scenario_name, release_name=release_name))
             self.assertEqual(expected, actual)
 
     # for debugging purposes
