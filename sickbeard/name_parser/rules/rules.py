@@ -1197,7 +1197,7 @@ class FixSeasonEpisodeDetection(Rule):
         for filepart in marker_sorted(fileparts, matches):
             seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
             # bug happens when there are 2 seasons...
-            if not seasons and len(seasons) != 2:
+            if not seasons or len(seasons) != 2:
                 continue
 
             # ... and no episodes

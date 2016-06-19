@@ -2116,3 +2116,10 @@
   mimetype: video/x-msvideo
   type: episode
 
+? Show.Name.Season.1.(x265.10bit.Joy)
+: title: Show Name
+  season: 1
+  video_codec: h265
+  video_profile: 10bit
+  release_group: Joy
+  type: episode
