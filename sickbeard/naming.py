@@ -150,11 +150,11 @@ def check_valid_naming(pattern=None, multi=None, anime_type=None):
     if anime_type is None:
         anime_type = sickbeard.NAMING_ANIME
 
-    logger.log(u"Checking whether the pattern " + pattern + " is valid for a single episode", logger.DEBUG)
+    logger.log(u"Checking whether the pattern is valid for a single episode: {0}".format(pattern), logger.DEBUG)
     valid = validate_name(pattern, None, anime_type)
 
     if multi is not None:
-        logger.log(u"Checking whether the pattern " + pattern + " is valid for a multi episode", logger.DEBUG)
+        logger.log(u"Checking whether the pattern is valid for a multi episode: {0}".format(pattern), logger.DEBUG)
         valid = valid and validate_name(pattern, multi, anime_type)
 
     return valid
@@ -169,7 +169,7 @@ def check_valid_abd_naming(pattern=None):
     if pattern is None:
         pattern = sickbeard.NAMING_PATTERN
 
-    logger.log(u"Checking whether the pattern " + pattern + " is valid for an air-by-date episode", logger.DEBUG)
+    logger.log(u"Checking whether the pattern is valid for an air-by-date episode: {0}".format(pattern), logger.DEBUG)
     valid = validate_name(pattern, abd=True)
 
     return valid
@@ -184,7 +184,7 @@ def check_valid_sports_naming(pattern=None):
     if pattern is None:
         pattern = sickbeard.NAMING_PATTERN
 
-    logger.log(u"Checking whether the pattern " + pattern + " is valid for an sports episode", logger.DEBUG)
+    logger.log(u"Checking whether the pattern is valid for an sports episode: {0}".format(pattern), logger.DEBUG)
     valid = validate_name(pattern, sports=True)
 
     return valid
