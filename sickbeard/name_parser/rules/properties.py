@@ -10,10 +10,12 @@ from guessit.rules.common import dash
 from rebulk.rebulk import Rebulk
 
 
-def mux_format():
+def additional_format():
     """
     Guessit issue: https://github.com/guessit-io/guessit/issues/307
-    TODO: Remove it when fixed
+    TODO: Remove it when fixed.
+
+    Additional WEBDLRip
     :return:
     """
     rebulk = Rebulk().regex_defaults(flags=re.IGNORECASE, abbreviations=[dash])
@@ -22,6 +24,6 @@ def mux_format():
     rebulk.regex('B[RD]-?Mux', value='BluRay')
     rebulk.regex('DVD-?Mux', value='DVD')
     rebulk.regex('WEB-?Mux', 'DL-?WEB-?Mux', 'WEB-?DL-?Mux', 'DL-?Mux', value='WEB-DL')
+    rebulk.regex('WEB-?DL-?Rip', value='WEBRip')
 
     return rebulk
-

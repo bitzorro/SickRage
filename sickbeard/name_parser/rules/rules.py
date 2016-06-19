@@ -36,7 +36,7 @@ from rebulk.rebulk import Rebulk
 from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
 
 
-season_range_separator = ('-', '~', '_-_', '_-_s', '-s', '.to.s', '.to.')
+season_range_separator = ('-', '~', '_-_', '_-_s', '-s', '.to.s', '.to.', 'to')
 
 
 class FixAnimeReleaseGroup(Rule):
@@ -181,14 +181,19 @@ class SpanishNewpctReleaseName(Rule):
         if not alternative_titles and not episode_titles:
             return
 
-        # retrieve all groups
-        groups = matches.markers.named('group')
-        for group in groups:
-            # then search the season and episode numbers: [Cap.102_103]
-            m = self.episode_re.search(group.raw)
-            g = m.groupdict() if m else None
-            # if found and the season numbers match...
-            if g and int(g['season']) == season.value and (not g['end_season'] or int(g['end_season']) == season.value):
+        fileparts = matches.markers.named('path')
+        for filepart in marker_sorted(fileparts, matches):
+            # retrieve all groups
+            groups = matches.markers.range(filepart.start, filepart.end, predicate=lambda mk: mk.name == 'group')
+            for group in groups:
+                # then search the season and episode numbers: [Cap.102_103]
+                m = self.episode_re.search(group.raw)
+                g = m.groupdict() if m else None
+                # if found and the season numbers match...
+                if not g or int(g['season']) != season.value or (
+                        g['end_season'] and int(g['end_season']) != season.value):
+                    continue
+
                 if not context.get('show_type'):
                     # fix the show_type as this is not anime
                     context['show_type'] = 'regular'
@@ -331,6 +336,7 @@ class FixInvalidTitleOrAlternativeTitle(Rule):
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
     absolute_re = re.compile(r'([\W|_]*)(?P<absolute_episode_start>\d{3,4})\-(?P<absolute_episode_end>\d{3,4})\W*$')
+    properties = ('title', 'alternative_title', 'episode_title')
 
     def when(self, matches, context):
         """
@@ -344,17 +350,20 @@ class FixInvalidTitleOrAlternativeTitle(Rule):
         if not episodes:
             return
 
-        to_remove = []
-        to_append = []
+        fileparts = matches.markers.named('path')
+        for filepart in marker_sorted(fileparts, matches):
+            # retrieve all problematic titles
+            problematic_titles = matches.range(filepart.start, filepart.end, predicate=
+                                               lambda match: match.name in self.properties)
 
-        problematic_titles = []
-        problematic_titles.extend(matches.named('title'))
-        problematic_titles.extend(matches.named('alternative_title'))
-        problematic_titles.extend(matches.named('episode_title'))
+            to_remove = []
+            to_append = []
 
-        for title in problematic_titles:
-            m = self.absolute_re.search(title.raw)
-            if m:
+            for title in problematic_titles:
+                m = self.absolute_re.search(title.raw)
+                if not m:
+                    continue
+
                 # Remove the problematic title
                 to_remove.append(title)
 
@@ -386,7 +395,7 @@ class FixInvalidTitleOrAlternativeTitle(Rule):
                         episode.end = title.start + m.end('absolute_episode_end')
                     to_append.append(episode)
 
-        return to_remove, to_append
+                return to_remove, to_append
 
 
 class FixWrongTitleDueToFilmTitle(Rule):
@@ -542,35 +551,42 @@ class CreateExtendedTitleWithAlternativeTitles(Rule):
         :type context: dict
         :return:
         """
-        title = matches.named('title', index=0)
-        alternative_titles = matches.named('alternative_title')
-        if not title or not alternative_titles:
-            return
-
-        if matches.named('alternative_title', predicate=lambda match: match.value.lower() in self.blacklist):
-            return
-
         # Do not concatenate the titles if it's not an anime and there are languages
         if not matches.tagged('anime') and matches.named('language'):
             return
 
-        previous = title
-        extended_title = copy.copy(title)
-        extended_title.name = 'extended_title'
-        extended_title.value = title.value
+        fileparts = matches.markers.named('path')
+        for filepart in marker_sorted(fileparts, matches):
+            title = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'title', index=0)
+            if not title:
+                continue
 
-        # extended title is the concatenation between title and all alternative titles
-        for alternative_title in alternative_titles:
-            holes = matches.holes(start=previous.end, end=alternative_title.start)
-            # if the separator is a dash, add an extra space before and after
-            separators = [' ' + h.value + ' ' if h.value == '-' else h.value for h in holes]
-            separator = ' '.join(separators) if separators else ' '
-            extended_title.value += separator + alternative_title.value
+            if matches.range(filepart.start, filepart.end, predicate=
+                             lambda match: match.name == 'alternative_title' and match.value.lower() in self.blacklist):
+                continue
 
-            previous = alternative_title
+            alternative_titles = matches.range(filepart.start, filepart.end, predicate=
+                                               lambda match: match.name == 'alternative_title')
+            if not alternative_titles:
+                continue
 
-        extended_title.end = previous.end
-        return extended_title
+            previous = title
+            extended_title = copy.copy(title)
+            extended_title.name = 'extended_title'
+            extended_title.value = title.value
+
+            # extended title is the concatenation between title and all alternative titles
+            for alternative_title in alternative_titles:
+                holes = matches.holes(start=previous.end, end=alternative_title.start)
+                # if the separator is a dash, add an extra space before and after
+                separators = [' ' + h.value + ' ' if h.value == '-' else h.value for h in holes]
+                separator = ' '.join(separators) if separators else ' '
+                extended_title.value += separator + alternative_title.value
+
+                previous = alternative_title
+
+            extended_title.end = previous.end
+            return extended_title
 
 
 class CreateExtendedTitleWithCountryOrYear(Rule):
@@ -620,17 +636,23 @@ class CreateExtendedTitleWithCountryOrYear(Rule):
         :type context: dict
         :return:
         """
-        title = matches.named('title', index=0)
-        if not title:
-            return
+        fileparts = matches.markers.named('path')
+        for filepart in marker_sorted(fileparts, matches):
+            title = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'title', index=0)
+            if not title:
+                continue
 
-        after_title = matches.next(title, index=0)
+            after_title = matches.next(title, index=0, predicate=
+                                       lambda match: match.end <= filepart.end and match.name in self.affected_names)
 
-        # only if there's a country or year
-        if after_title and after_title.name in self.affected_names:
-            next_match = matches.next(after_title, index=0)
+            # only if there's a country or year
+            if not after_title:
+                continue
+
             # Only add country or year if the next match is season, episode or date
-            if next_match and next_match.name in ('season', 'episode', 'date'):
+            next_match = matches.next(after_title, index=0, predicate=
+                                      lambda match: match.name in ('season', 'episode', 'date'))
+            if next_match:
                 extended_title = copy.copy(title)
                 extended_title.name = 'extended_title'
                 extended_title.value = extended_title.value + ' ' + re.sub(r'\W*', '', str(after_title.raw))
@@ -818,23 +840,30 @@ class FixTitlesContainsNumber(Rule):
         :type context: dict
         :return:
         """
-        title = matches.named('title', index=0)
-        # and there's a title...
-        if title:
-            episode_title = matches.next(title, index=0)
-            # and after the title there's an episode_title match...
-            if episode_title and episode_title.name == 'episode_title':
-                holes = matches.holes(start=title.end, end=episode_title.start)
-                number = holes[0] if len(holes) == 1 else None
-                # and between the title and episode_title, there's one hole...
-                if number and number.raw.isdigit():
-                    # join all three matches into one new title
-                    new_title = copy.copy(title)
-                    new_title.value = ' '.join([new_title.value, number.value, episode_title.value])
-                    new_title.end = episode_title.end
+        fileparts = matches.markers.named('path')
+        for filepart in marker_sorted(fileparts, matches):
+            title = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'title', index=0)
+            if not title:
+                continue
 
-                    # remove the old title and episode title; and append the new title
-                    return [title, episode_title], [new_title]
+            # and after the title there's an episode_title match...
+            episode_title = matches.next(title, index=0, predicate=
+                                         lambda match: match.name == 'episode_title' and match.end <= filepart.end)
+
+            if not episode_title:
+                continue
+
+            holes = matches.holes(start=title.end, end=episode_title.start)
+            number = holes[0] if len(holes) == 1 else None
+            # and between the title and episode_title, there's one hole...
+            if number and number.raw.isdigit():
+                # join all three matches into one new title
+                new_title = copy.copy(title)
+                new_title.value = ' '.join([new_title.value, number.value, episode_title.value])
+                new_title.end = episode_title.end
+
+                # remove the old title and episode title; and append the new title
+                return [title, episode_title], [new_title]
 
 
 class AnimeWithSeasonAbsoluteEpisodeNumbers(Rule):
@@ -881,38 +910,50 @@ class AnimeWithSeasonAbsoluteEpisodeNumbers(Rule):
         :type context: dict
         :return:
         """
-        if context.get('show_type') != 'regular' and matches.tagged('anime'):
-            seasons = matches.named('season')
+        if context.get('show_type') == 'regular' or not matches.tagged('anime'):
+            return
+
+        fileparts = matches.markers.named('path')
+        for filepart in marker_sorted(fileparts, matches):
+            seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
             for season in seasons:
-                title = matches.previous(season, index=-1)
-                episode_title = matches.next(season, index=0)
+                if not season.parent or not season.parent.private:
+                    continue
+
+                title = matches.previous(season, index=-1, predicate=
+                                         lambda match: match.name == 'title' and match.end <= filepart.end)
+                episode_title = matches.next(season, index=0, predicate=
+                                             lambda match: (match.name == 'episode_title' and
+                                                            match.end <= filepart.end and
+                                                            match.value.isdigit()))
 
                 # the previous match before the season is the series name and
                 # the match after season is episode title and episode title is a number
-                if title and episode_title and title.name == 'title' and episode_title.name == 'episode_title' \
-                        and episode_title.value.isdigit() and season.parent and season.parent.private:
-                    to_remove = []
-                    to_append = []
+                if not title or not episode_title:
+                    continue
 
-                    # adjust title to append the series name.
-                    # Only the season.parent contains the S prefix in its value
-                    new_title = copy.copy(title)
-                    new_title.value = ' '.join([title.value, season.parent.value])
-                    new_title.end = season.end
+                to_remove = []
+                to_append = []
 
-                    # other fileparts might have the same season to be removed from the matches
-                    # e.g.: /Show.Name.S2/[Group].Show.Name.S2.-.19.[1080p]
-                    to_remove.extend(matches.named('season', predicate=lambda match: match.value == season.value))
-                    to_remove.append(title)
-                    to_append.append(new_title)
+                # adjust title to append the series name.
+                # Only the season.parent contains the S prefix in its value
+                new_title = copy.copy(title)
+                new_title.value = ' '.join([title.value, season.parent.value])
+                new_title.end = season.end
 
-                    # move episode_title to absolute_episode
-                    absolute_episode = copy.copy(episode_title)
-                    absolute_episode.name = 'absolute_episode'
-                    absolute_episode.value = int(episode_title.value)
-                    to_remove.append(episode_title)
-                    to_append.append(absolute_episode)
-                    return to_remove, to_append
+                # other fileparts might have the same season to be removed from the matches
+                # e.g.: /Show.Name.S2/[Group].Show.Name.S2.-.19.[1080p]
+                to_remove.extend(matches.named('season', predicate=lambda match: match.value == season.value))
+                to_remove.append(title)
+                to_append.append(new_title)
+
+                # move episode_title to absolute_episode
+                absolute_episode = copy.copy(episode_title)
+                absolute_episode.name = 'absolute_episode'
+                absolute_episode.value = int(episode_title.value)
+                to_remove.append(episode_title)
+                to_append.append(absolute_episode)
+                return to_remove, to_append
 
 
 class AnimeAbsoluteEpisodeNumbers(Rule):
@@ -956,12 +997,21 @@ class AnimeAbsoluteEpisodeNumbers(Rule):
         :return:
         """
         # only for shows that seems to be animes
-        if context.get('show_type') != 'regular' and matches.tagged('anime') and matches.tagged('weak-duplicate'):
-            season = matches.named('season', index=0)
-            episode = matches.named('episode', index=0)
+        if context.get('show_type') == 'regular' or not matches.tagged('anime') or not matches.tagged('weak-duplicate'):
+            return
+
+        fileparts = matches.markers.named('path')
+        for filepart in marker_sorted(fileparts, matches):
+            season = matches.range(filepart.start, filepart.end, index=0, predicate=
+                                   lambda match: match.name == 'season' and match.raw.isdigit())
+            episode = matches.next(season, index=0, predicate=
+                                   lambda match: (match.name == 'episode' and
+                                                  match.end <= filepart.end and
+                                                  match.raw.isdigit()))
+
             # there should be season and episode and the episode should start right after the season and both raw values
             # should be digit
-            if season and episode and season.end == episode.start and season.raw.isdigit() and episode.raw.isdigit():
+            if season and episode and season.end == episode.start:
                 # then make them an absolute episode:
                 absolute_episode = copy.copy(episode)
                 absolute_episode.name = 'absolute_episode'
@@ -1209,23 +1259,128 @@ class FixSeasonNotDetected(Rule):
         :type context: dict
         :return:
         """
-        to_remove = []
-        to_append = []
-        to_rename = []
+        fileparts = matches.markers.named('path')
+        for filepart in marker_sorted(fileparts, matches):
+            episodes = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'episode')
+            for episode in episodes:
+                previous = matches.previous(episode, index=0)
+                m = self.season_re.search(previous.raw) if previous else None
+                if not m or matches.holes(previous.end, episode.start, index=0):
+                    continue
 
-        episodes = matches.named('episode')
-        for episode in episodes:
-            previous = matches.previous(episode, index=0)
-            m = self.season_re.search(previous.raw) if previous else None
-            if m and not matches.holes(previous.end, episode.start, index=0):
+                to_remove = []
+                to_append = []
+                to_rename = []
+
                 new_value = cleanup(previous.raw[:m.start()])
+                # if there's a new value (e.g.: 'Show Name Season' became 'Show Name'), keep it
                 if new_value:
                     new_match = copy.copy(previous)
                     new_match.value = new_value
                     new_match.end = m.start()
                     to_append.append(new_match)
+
+                matches.next(episode, index=0, predicate=lambda match: match.name == 'episode')
+
                 to_remove.append(previous)
                 to_rename.append(episode)
+
+                return to_remove, to_append, to_rename
+
+
+class FixWrongSeasonRangeDetectionDueToEpisode(Rule):
+    """
+    e.g.: Show.Name.-.Season.1.to.3.-.Mp4.1080p
+          Show.Name.-.Season.1-3.-.Mp4.1080p
+
+    guessit -t episode "Show.Name.-.Season.1.to.3.-.Mp4.1080p"
+
+    without this fix:
+        For: Show.Name.-.Season.1.to.3.-.Mp4.1080p
+        GuessIt found: {
+            "title": "Show Name",
+            "season": 1,
+            "episode_title": "to",
+            "episode": 3,
+            "container": "MP4",
+            "screen_size": "1080p",
+            "type": "episode"
+        }
+
+
+    with this fix:
+        For: Show.Name.-.Season.1.to.3.-.Mp4.1080p
+        GuessIt found: {
+            "title": "Show Name",
+            "season": [1, 2, 3],
+            "container": "MP4",
+            "screen_size": "1080p",
+            "type": "episode"
+        }
+
+    """
+    priority = POST_PROCESS
+    consequence = [RemoveMatch, AppendMatch, RenameMatch('season')]
+
+    def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
+        to_remove = []
+        to_append = []
+        to_rename = []
+
+        fileparts = matches.markers.named('path')
+        for filepart in marker_sorted(fileparts, matches):
+            seasons = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'season')
+            if len(seasons) != 1:
+                continue
+
+            current_season = seasons[0]
+            while current_season:
+                next_match = matches.next(current_season, index=0, predicate= lambda match:
+                                          (match.end <= filepart.end and match.name in ('episode', 'episode_title')))
+
+                if not next_match:
+                    break
+
+                if next_match.name == 'episode_title':
+                    separator = next_match
+                    next_season = matches.next(next_match, index=0, predicate=
+                                               lambda match: match.end <= filepart.end and match.name == 'episode')
+                elif next_match.name == 'episode':
+                    separator = matches.holes(current_season.end, next_match.start, index=0)
+                    next_season = next_match
+
+                if not next_season or not separator:
+                    break
+
+                if separator.value in ('.', 'and', ',.', '.,', ','):
+                    to_rename.append(next_season)
+                    if separator.name == 'episode_title':
+                        to_remove.append(next_match)
+
+                    current_season = next_season
+                elif separator.value in season_range_separator:
+                    to_rename.append(next_season)
+                    if separator.name == 'episode_title':
+                        to_remove.append(next_match)
+
+                    # then create the season range
+                    for i in range(current_season.value + 1, next_season.value):
+                        new_season = copy.copy(current_season)
+                        new_season.value = i
+                        new_season.start = separator.start
+                        new_season.end = separator.end
+                        to_append.append(new_season)
+
+                    current_season = next_season
+                else:
+                    break
 
         return to_remove, to_append, to_rename
 
@@ -1275,9 +1430,7 @@ class FixWrongSeasonAndReleaseGroup(Rule):
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
-    problematic_words = {
-        'bs666', 'ccs3', 'qqss44',
-    }
+    previous_properties = ('video_codec', 'format', 'release_group')
 
     def when(self, matches, context):
         """
@@ -1300,18 +1453,19 @@ class FixWrongSeasonAndReleaseGroup(Rule):
                 holes = matches.holes(start=previous.end, end=last_season.start)
                 hole = holes[0] if len(holes) == 1 else None
                 # there's only 1 hole before the season
-                if hole:
-                    prefix = previous.value if previous.name == 'release_group' else ''
-                    correct_release_group = prefix + hole.raw + last_season.raw
-                    # and this hole is part of the problematic words
-                    for word in self.problematic_words:
-                        if word in correct_release_group.lower():
-                            new_release_group = copy.copy(previous)
-                            new_release_group.value = correct_release_group
+                if not hole:
+                    continue
 
-                            to_remove.append(last_season)
-                            to_remove.append(previous)
-                            to_append.append(new_release_group)
+                prefix = previous.value if previous.name == 'release_group' else ''
+                correct_release_group = prefix + hole.raw + last_season.raw
+
+                if matches.previous(last_season, predicate=lambda match: match.name in self.previous_properties):
+                    new_release_group = copy.copy(previous)
+                    new_release_group.value = correct_release_group
+
+                    to_remove.append(last_season)
+                    to_remove.append(previous)
+                    to_append.append(new_release_group)
 
         return to_remove, to_append
 
@@ -1885,6 +2039,7 @@ def rules():
         FixScreenSizeConflict,
         FixWrongTitleDueToFilmTitle,
         FixSeasonNotDetected,
+        FixWrongSeasonRangeDetectionDueToEpisode,
         FixWrongSeasonAndReleaseGroup,
         FixSeasonEpisodeDetection,
         FixSeasonRangeDetection,
