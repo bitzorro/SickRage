@@ -1359,7 +1359,7 @@ class FixWrongSeasonRangeDetectionDueToEpisode(Rule):
                 if not next_season or not separator:
                     break
 
-                if separator.value in ('.', 'and', ',.', '.,', ','):
+                if separator.value in ('.', 'and', ',.', '.,', '.,.', ','):
                     to_rename.append(next_season)
                     if separator.name == 'episode_title':
                         to_remove.append(next_match)
