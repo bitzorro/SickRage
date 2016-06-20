@@ -22,6 +22,7 @@ def additional_format():
     rebulk.defaults(name='format')
     rebulk.regex('HDTV-?Mux', value='HDTV')
     rebulk.regex('B[RD]-?Mux', value='BluRay')
+    rebulk.regex('Bluray-?Mux', value='BluRay')
     rebulk.regex('DVD-?Mux', value='DVD')
     rebulk.regex('WEB-?Mux', 'DL-?WEB-?Mux', 'WEB-?DL-?Mux', 'DL-?Mux', value='WEB-DL')
     rebulk.regex('WEB-?DL-?Rip', value='WEBRip')

@@ -1991,6 +1991,9 @@ class ReleaseGroupPostProcessor(Rule):
         # italian release: drop everything after [CURA]
         re.compile(r'\[CURA\].*$', flags=re.IGNORECASE),
 
+        # NLSubs-word
+        re.compile(r'\W*\b([a-z]{1,3}\-?)?(subs?)\b\W*', flags=re.IGNORECASE),
+
         # [word], (word), {word}
         re.compile(r'(?<=.)\W*[\[\(\{].+[\}\)\]]?\W*$', flags=re.IGNORECASE),
 
@@ -2005,9 +2008,6 @@ class ReleaseGroupPostProcessor(Rule):
         # https://github.com/guessit-io/guessit/issues/300
         # ReEnc, Re-Enc
         re.compile(r'\W*\bre\-?enc\b\W*', flags=re.IGNORECASE),
-
-        # NLSubs-word
-        re.compile(r'\W*\b([a-z]{2,3})(subs?)\b\W*', flags=re.IGNORECASE),
 
         # word.rar, word.gz
         re.compile(r'\.((rar)|(gz)|(\d+))$', flags=re.IGNORECASE),
