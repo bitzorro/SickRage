@@ -209,14 +209,18 @@
 
 # stupid
 # TO FIX: current parser doesn't return series_name
-#         guessit parser cannot parse this correctly
-? tpz-abc102
-: title: abc
+#         guessit parser cannot parse this correctly, only using a parent folder
+? /shows/Show.Name.Abbreviated.S01E02.1080p.BluRay.x264-TPZ/tzp-shownameabr102.mkv
+: title: Show Name Abbreviated
   season: 1
   episode: 2
-  release_group: tpz
+  video_codec: h264
+  format: BluRay
+  screen_size: 1080p
+  release_group: TPZ
+  container: mkv
+  mimetype: video/x-matroska
   type: episode
-  disabled: true # to be fixed
 
 # verbose
 ? Show Name Season 1 Episode 2 Ep Name
@@ -293,13 +297,13 @@
   release_group: Group
   type: episode
 
-# no_season
-? Show Name - 01 - Ep Name
+# no_season (on filename... only works with a parent folder)
+? /show/Show Name/Season 03/Show Name - 01 - Ep Name
 : title: Show Name
+  season: 3
   episode: 1
   episode_title: Ep Name
   type: episode
-  disabled: true # work in progress
 
 # no_season
 # TODO: current parser splits folders and files, but guessit does it altogether.
@@ -700,7 +704,7 @@
   release_group: ABC
   type: episode
 
-# FixScreenSizeConflict
+# FixSeasonAndEpisodeConflicts (conflict with screen size)
 ? "[SuperGroup].Show.Name.-.06.[720.Hi10p][1F5578AC]"
 : title: Show Name
   absolute_episode: 6
@@ -710,7 +714,7 @@
   release_group: SuperGroup
   type: episode
 
-# FixScreenSizeConflict
+# FixSeasonAndEpisodeConflicts (conflict with screen size)
 ? "[SuperGroup].Show.Name.-.06.[1080.Hi10p][1F5578AC]"
 : title: Show Name
   absolute_episode: 6
@@ -718,6 +722,20 @@
   video_profile: 10bit
   crc32: 1F5578AC
   release_group: SuperGroup
+  type: episode
+
+# FixSeasonAndEpisodeConflicts (conflict with expected release_group)
+? Show.Name.S02.REPACK.720p.BluRay.DD5.1.x264-4EVERHD
+: title: Show Name
+  season: 2
+  other: Proper
+  proper_count: 1
+  screen_size: 720p
+  format: BluRay
+  audio_codec: DolbyDigital
+  audio_channels: '5.1'
+  video_codec: h264
+  release_group: 4EVERHD
   type: episode
 
 # ExpectedTitlePostProcessor
@@ -1189,6 +1207,18 @@
   release_group: Group
   type: episode
 
+# PartsAsEpisodeNumbers (negative scenario - there's date)
+? Show.Name.2016.05.24.Some.Name.Part.2.720p.BluRay.x264-Group
+: title: Show Name
+  date: 2016-05-24
+  episode_title: Some Name
+  part: 2
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  release_group: Group
+  type: episode
+
 # PartsAsEpisodeNumbers (negative scenario - there are season and episode)
 ? Show.Name.S02E01.Some.Name.Part.2.720p.BluRay.x264-Group
 : title: Show Name
@@ -1346,7 +1376,8 @@
 # TODO: FixSeasonRangeDetection and episode_count scenario
 
 # FixEpisodeRangeDetection
-? show name s02e01-e04
+? - show name s02e01-e04
+  - show name S02E01-E04
 : title: show name
   season: 2
   episode: [1, 2, 3, 4]
@@ -1579,7 +1610,6 @@
   video_codec: XviD
   release_group: GoodGroup
   type: episode
-  disabled: true # to be fixed
 
 # Corner case with only date and 720p
 ? The.Show.Name.2016.05.18.720.HDTV.x264-GROUP.VTV
@@ -1590,7 +1620,6 @@
   video_codec: h264
   release_group: GROUP
   type: episode
-  disabled: true # to be fixed
 
 # Corner case with season range using range separator
 ? - Show.Name.-.Season.1.to.3.-.Mp4.1080p
@@ -1806,7 +1835,6 @@
   other: Fastsub
   release_group: GROUP
   type: episode
-  disabled: true # work in progress
 
 # Formula 1 tv show
 ? Show.Name.S02E05.F1.Special.720p.HDTV.x264-C4TV.English

@@ -36,7 +36,10 @@ from rebulk.rebulk import Rebulk
 from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
 
 
-season_range_separator = ('-', '~', '_-_', '_-_s', '-s', '.to.s', '.to.', 'to')
+simple_separator = ('.', 'and', ',.', '.,', '.,.', ',')
+range_separator = ('-', '~', '_-_', '.to.', 'to')
+season_range_separator = range_separator + ('_-_s', '-s', '.to.s')
+episode_range_separator = range_separator + ('_-_e', '-e', '.to.e')
 
 
 class FixAnimeReleaseGroup(Rule):
@@ -234,14 +237,17 @@ class SpanishNewpctReleaseName(Rule):
                 return to_remove, to_append
 
 
-class FixScreenSizeConflict(Rule):
+class FixSeasonAndEpisodeConflicts(Rule):
     """
-    Certain release names contains a conflicting screen_size (e.g.: 720 without p). It confuses guessit: the guessed
+    - Fix release group conflict with episode and or season
+    - Certain release names contains a conflicting screen_size (e.g.: 720 without p). It confuses guessit: the guessed
     season and episode needs to be removed.
     Bug: https://github.com/guessit-io/guessit/issues/308
 
-    e.g.: "[SuperGroup].Show.Name.-.06.[720.Hi10p][1F5578AC]"
+    e.g.: "Show.Name.S02.REPACK.720p.BluRay.DD5.1.x264-4EVERHD"
+          "[SuperGroup].Show.Name.-.06.[720.Hi10p][1F5578AC]"
 
+    guessit -t episode -G 4EVERHD "Show.Name.S02.REPACK.720p.BluRay.DD5.1.x264-4EVERHD"
     guessit -t episode "[SuperGroup].Show.Name.-.06.[720.Hi10p][1F5578AC]"
 
     without this fix:
@@ -289,6 +295,10 @@ class FixScreenSizeConflict(Rule):
         screen_sizes = matches.named('screen_size')
         for screen_size in screen_sizes:
             to_remove.extend(matches.at_match(screen_size, predicate=lambda match: match.name in ('season', 'episode')))
+
+        release_groups = matches.named('release_group')
+        for group in release_groups:
+            to_remove.extend(matches.at_match(group, predicate=lambda match: match.name in ('season', 'episode')))
 
         return to_remove
 
@@ -1139,7 +1149,7 @@ class PartsAsEpisodeNumbers(Rule):
         :return:
         """
         # only if there's no season and no episode
-        if not matches.named('season') and not matches.named('episode'):
+        if not matches.named('season') and not matches.named('episode') and not matches.named('date'):
             return matches.named('part')
 
 
@@ -1340,6 +1350,10 @@ class FixWrongSeasonRangeDetectionDueToEpisode(Rule):
             if len(seasons) != 1:
                 continue
 
+            # and no season or episodes on any next fileparts
+            if matches.range(filepart.end, predicate=lambda match: match.name in ('season', 'episode')):
+                continue
+
             current_season = seasons[0]
             while current_season:
                 next_match = matches.next(current_season, index=0, predicate= lambda match:
@@ -1359,13 +1373,13 @@ class FixWrongSeasonRangeDetectionDueToEpisode(Rule):
                 if not next_season or not separator:
                     break
 
-                if separator.value in ('.', 'and', ',.', '.,', '.,.', ','):
+                if separator.value in simple_separator:
                     to_rename.append(next_season)
                     if separator.name == 'episode_title':
                         to_remove.append(next_match)
 
                     current_season = next_season
-                elif separator.value in season_range_separator:
+                elif separator.value in season_range_separator and 0 < current_season.value < next_season.value < 100:
                     to_rename.append(next_season)
                     if separator.name == 'episode_title':
                         to_remove.append(next_match)
@@ -1524,8 +1538,8 @@ class FixSeasonRangeDetection(Rule):
             start_season = seasons[0] if len(seasons) == 2 else None
             end_season = seasons[-1] if len(seasons) == 2 else None
 
-            # and no episodes on any next fileparts
-            if matches.range(filepart.end, predicate=lambda match: match.name == 'episode'):
+            # and no season or episodes on any next fileparts
+            if matches.range(filepart.end, predicate=lambda match: match.name in ('season', 'episode')):
                 continue
 
             # and first season is lesser than the second and both are between 1 and 99
@@ -1541,6 +1555,8 @@ class FixSeasonRangeDetection(Rule):
                     for i in range(start_season.value + 1, end_season.value):
                         new_season = copy.copy(start_season)
                         new_season.value = i
+                        new_season.start = start_season.end
+                        new_season.end = end_season.start
                         to_append.append(new_season)
 
         return to_remove, to_append
@@ -1582,7 +1598,8 @@ class FixEpisodeRangeDetection(Rule):
         }
     """
     priority = POST_PROCESS
-    consequence = [AppendMatch, RenameMatch('episode')]
+    consequence = [RemoveMatch, AppendMatch, RenameMatch('episode')]
+    separator_re = re.compile(r'(?P<separator>[^\d]+)\d+')
 
     def when(self, matches, context):
         """
@@ -1593,15 +1610,17 @@ class FixEpisodeRangeDetection(Rule):
         :return:
         """
         to_append = []
+        to_remove = []
         to_rename = []
 
         fileparts = matches.markers.named('path')
         for filepart in marker_sorted(fileparts, matches):
             episodes = matches.range(filepart.start, filepart.end, predicate=lambda match: match.name == 'episode')
 
-            episode_count = matches.next(episodes[0], index=0) if len(episodes) == 1 else None
-            if episode_count and episode_count.name == 'episode_count' and episode_count.end <= filepart.end:
-                episodes.append(episode_count)
+            next_match = matches.next(episodes[0], index=0) if len(episodes) == 1 else None
+            if next_match and next_match.name in ('episode_count', 'episode_title') and (
+                    isinstance(next_match.value, int) or next_match.value.isdigit()) and next_match.end <= filepart.end:
+                episodes.append(next_match)
 
             # only when there are 2 episodes
             start_episode = episodes[0] if len(episodes) == 2 else None
@@ -1612,21 +1631,42 @@ class FixEpisodeRangeDetection(Rule):
                 continue
 
             # and first episode is lesser than the second and both are between 1 and 99
-            if start_episode and end_episode and 0 < start_episode.value < end_episode.value < 100:
-                holes = matches.holes(start=start_episode.end, end=end_episode.start)
-                hole = holes[0] if len(holes) == 1 else None
-                # and they are separated by a 'range separator'
-                if hole and hole.value.lower() in ('-', '-e'):
-                    # then create the missing numbers
-                    for i in range(start_episode.value + 1, end_episode.value):
-                        new_season = copy.copy(start_episode)
-                        new_season.value = i
-                        to_append.append(new_season)
+            if start_episode and end_episode and 0 < start_episode.value < int(end_episode.value) < 100:
+                separators = self.separator_re.findall(end_episode.raw)
+                if separators:
+                    separator = separators[0]
+                else:
+                    holes = matches.holes(start=start_episode.end, end=end_episode.start)
+                    separator = holes[0].value if len(holes) == 1 else None
 
+                # and they are separated by a 'range separator'
+                if not separator:
+                    continue
+
+                is_simple_separator = separator.lower() in simple_separator
+                is_range = separator.lower() in episode_range_separator
+                if is_range:
+                    # then create the missing numbers
+                    for i in range(start_episode.value + 1, int(end_episode.value)):
+                        new_episode = copy.copy(start_episode)
+                        new_episode.value = i
+                        new_episode.start = start_episode.end
+                        new_episode.end = end_episode.start
+                        to_append.append(new_episode)
+
+                if is_range or is_simple_separator:
                     if end_episode.name == 'episode_count':
                         to_rename.append(end_episode)
+                    elif end_episode.name == 'episode_title':
+                        to_remove.append(end_episode)
 
-        return to_append, to_rename
+                        end_episode = copy.copy(end_episode)
+                        end_episode.name = 'episode'
+                        end_episode.value = int(end_episode.value)
+                        end_episode.tags = []
+                        to_append.append(end_episode)
+
+        return to_remove, to_append, to_rename
 
 
 class FixEpisodeRangeWithSeasonDetection(Rule):
@@ -1709,6 +1749,8 @@ class FixEpisodeRangeWithSeasonDetection(Rule):
                         for i in range(first_episode.value + 1, end_episode.value):
                             new_episode = copy.copy(first_episode)
                             new_episode.value = i
+                            new_episode.start = first_episode.end
+                            new_episode.end = end_episode.start
                             to_append.append(new_episode)
 
         return to_remove, to_append
@@ -2036,7 +2078,7 @@ def rules():
         FixAnimeReleaseGroup,
         SpanishNewpctReleaseName,
         FixInvalidTitleOrAlternativeTitle,
-        FixScreenSizeConflict,
+        FixSeasonAndEpisodeConflicts,
         FixWrongTitleDueToFilmTitle,
         FixSeasonNotDetected,
         FixWrongSeasonRangeDetectionDueToEpisode,
