@@ -305,6 +305,10 @@ class NameParser(object):
                     s = bestResult.season_number
                     e = epNo
 
+                    # guessit might return more than one season. Not supported yet!
+                    if isinstance(s, list):
+                        s = s[0] if len(s) == 1 else None
+
                     if bestResult.show.is_scene:
                         (s, e) = scene_numbering.get_indexer_numbering(bestResult.show.indexerid,
                                                                        bestResult.show.indexer,
