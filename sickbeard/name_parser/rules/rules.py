@@ -29,8 +29,11 @@ have a fixed execution order, that's why the rules() method should add the rules
 import copy
 import re
 
+from guessit.rules.common import seps
 from guessit.rules.common.comparators import marker_sorted
 from guessit.rules.common.formatters import cleanup
+from guessit.rules.common.validators import int_coercable
+from guessit.rules.properties.release_group import clean_groupname
 from rebulk.processors import POST_PROCESS
 from rebulk.rebulk import Rebulk
 from rebulk.rules import Rule, AppendMatch, RemoveMatch, RenameMatch
@@ -804,6 +807,7 @@ class FixTvChaosUkWorkaround(Rule):
                 continue
 
             to_remove.append(m_x264)
+            m_hdtv.tags.append('tvchaosuk')
 
         return to_remove
 
@@ -1948,6 +1952,90 @@ class FixMultipleTitles(Rule):
         return to_remove
 
 
+class FixWrongReleaseGroupDueToOther(Rule):
+    """
+    Some release groups are not detected when there's other (proper, remux, complete, etc) or
+    when they appear after container.
+    Bug: https://github.com/guessit-io/guessit/issues/313
+
+    e.g.: Show.Name.S01E01.2008.BluRay.VC1.1080P.5.1.WMV-NOVO
+          Show.Name.S01E02.HDTV.x264.PROPER-LOL
+
+    without this fix:
+        For: Show.Name.S01E02.HDTV.x264.PROPER-LOL
+        GuessIt found: {
+            "title": "Cosmos A Space Time Odyssey",
+            "season": 1,
+            "episode": 2,
+            "format": "HDTV",
+            "video_codec": "h264",
+            "other": "Proper",
+            "proper_count": 1,
+            "type": "episode"
+        }
+
+    with this fix:
+        For: Show.Name.S01E02.HDTV.x264.PROPER-LOL
+        GuessIt found: {
+            "title": "Cosmos A Space Time Odyssey",
+            "season": 1,
+            "episode": 2,
+            "format": "HDTV",
+            "video_codec": "h264",
+            "other": "Proper",
+            "proper_count": 1,
+            "release_group": "LOL",
+            "type": "episode"
+        }
+    """
+    priority = POST_PROCESS
+    consequence = [RemoveMatch, AppendMatch]
+    scene_previous_names = ['video_codec', 'format', 'video_api', 'audio_codec', 'audio_profile', 'video_profile',
+                            'audio_channels', 'screen_size', 'other', 'container']
+
+    def when(self, matches, context):
+        """
+        :param matches:
+        :type matches: rebulk.match.Matches
+        :param context:
+        :type context: dict
+        :return:
+        """
+        if matches.tagged('newpct'):
+            return
+
+        to_append = []
+        to_remove = []
+
+        for filepart in marker_sorted(matches.markers.named('path'), matches):
+            start, end = filepart.span
+
+            release_group = matches.range(start, end, predicate=lambda match: match.name == 'release_group', index=0)
+            if release_group and 'anime' not in release_group.tags:
+                continue
+
+            last_hole = matches.holes(start, end + 1, predicate=lambda hole: cleanup(hole.value), index=-1)
+            if not last_hole:
+                continue
+
+            previous_match = matches.previous(last_hole, lambda match: not match.private, index=0)
+            if previous_match and previous_match.name in self.scene_previous_names and \
+                    'tvchaosuk' not in previous_match.tags and \
+                    not matches.input_string[previous_match.end:last_hole.start].strip(seps) and \
+                    not int_coercable(last_hole.value.strip(seps)):
+
+                if release_group:
+                    if release_group.start <= previous_match.start:
+                        continue
+
+                    to_remove.append(release_group)
+
+                last_hole.name = 'release_group'
+                to_append.append(last_hole)
+
+        return to_remove, to_append
+
+
 class ReleaseGroupPostProcessor(Rule):
     """
     Release Group post processor
@@ -1992,7 +2080,12 @@ class ReleaseGroupPostProcessor(Rule):
         re.compile(r'\[CURA\].*$', flags=re.IGNORECASE),
 
         # NLSubs-word
-        re.compile(r'\W*\b([a-z]{1,3}\-?)?(subs?)\b\W*', flags=re.IGNORECASE),
+        re.compile(r'\W*\b([a-z]{1,3}[\.\-]?)?(subs?)\b\W*', flags=re.IGNORECASE),
+
+        # https://github.com/guessit-io/guessit/issues/302
+        # INTERNAL
+        re.compile(r'\W*\b(internal|obfuscated)\b\W*', flags=re.IGNORECASE),
+        re.compile(r'\W*\b(vtv|sd|avc|dirfix|dual|audio|norar|legenda(do)?|hebits)\b\W*', flags=re.IGNORECASE),
 
         # [word], (word), {word}
         re.compile(r'(?<=.)\W*[\[\(\{].+[\}\)\]]?\W*$', flags=re.IGNORECASE),
@@ -2017,10 +2110,6 @@ class ReleaseGroupPostProcessor(Rule):
 
         # word-fansub
         re.compile(r'(?<=[a-z0-9]{3})\-((fan)?sub(s)?)$', flags=re.IGNORECASE),
-
-        # https://github.com/guessit-io/guessit/issues/302
-        # INTERNAL
-        re.compile(r'\W*\b(internal|obfuscated|vtv|sd|avc|dirfix|dual)\b\W*', flags=re.IGNORECASE),
 
         # ...word
         re.compile(r'^\W+', flags=re.IGNORECASE),
@@ -2049,13 +2138,12 @@ class ReleaseGroupPostProcessor(Rule):
                 if not value:
                     break
 
-            if not value:
-                to_remove.append(release_group)
             if release_group.value != value:
-                new_release_group = copy.copy(release_group)
-                new_release_group.value = cleanup(value)
                 to_remove.append(release_group)
-                to_append.append(new_release_group)
+                if value:
+                    new_release_group = copy.copy(release_group)
+                    new_release_group.value = clean_groupname(value)
+                    to_append.append(new_release_group)
 
         return to_remove, to_append
 
@@ -2097,6 +2185,7 @@ def rules():
         ExpectedTitlePostProcessor,
         CreateExtendedTitleWithAlternativeTitles,
         CreateExtendedTitleWithCountryOrYear,
+        FixWrongReleaseGroupDueToOther,
         ReleaseGroupPostProcessor,
         FixMultipleTitles
     )

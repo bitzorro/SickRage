@@ -36,15 +36,19 @@ class GuessitNameParser(object):
         # https://github.com/guessit-io/guessit/issues/297
         # guessit blacklists parts of the name for the following groups
         r're:\bbyEMP\b',
+        r're:\bCDP\b',
+        r're:\bCDD\b',
         r're:\bELITETORRENT\b',
         r're:\bF4ST3R\b',
         r're:\bF4ST\b',
+        r're:\bHDD\b',
         r're:\bJIVE\b',
         r're:\bNovaRip\b',
         r're:\bPARTiCLE\b',
         r're:\bPOURMOi\b',
         r're:\bRipPourBox\b',
         r're:\bRiPRG\b',
+        r're:\bTGNF4ST\b',
         r're:\bTV2LAX9\b',
 
         # in conjunction with rule: SpanishNewpctReleaseName
@@ -52,6 +56,8 @@ class GuessitNameParser(object):
 
         # release groups taht starts with numbers
         r're:\b4EVERHD\b',
+        r're:\bW4F\b',
+        r're:\bPtM\b',
     }
 
     allowed_languages = {

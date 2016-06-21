@@ -379,6 +379,7 @@
   screen_size: 720p
 # TODO: Fix
 #  release_group: Resistance
+  release_group: version
   other: HQ
   type: episode
 
@@ -2151,3 +2152,105 @@
   video_profile: 10bit
   release_group: Joy
   type: episode
+
+? - Show.Name.S01E01.DVDRip.XviD-W4F
+  - Show.Name.S01E01.DVDRip.XviD-W4F[something]
+: title: Show Name
+  season: 1
+  episode: 1
+  format: DVD
+  video_codec: XviD
+  release_group: W4F
+  type: episode
+
+# FixWrongReleaseGroupDueToOther
+? Show.Name.S01E01.DVDRip.XviD.REPACK-OMiCRON
+: title: Show Name
+  season: 1
+  episode: 1
+  format: DVD
+  video_codec: XviD
+  other: Proper
+  proper_count: 1
+  release_group: OMiCRON
+  type: episode
+
+# FixWrongReleaseGroupDueToOther
+? Show.Name.S01E01.2008.BluRay.VC1.1080P.5.1.WMV-NOVO
+: title: Show Name
+  season: 1
+  episode: 1
+  year: 2008
+  format: BluRay
+  screen_size: 1080p
+  audio_channels: '5.1'
+  container: WMV
+  release_group: NOVO
+  type: episode
+
+# FixWrongReleaseGroupDueToOther
+? Show.Name.S01E02.HDTV.x264.PROPER-LOL
+: title: Show Name
+  season: 1
+  episode: 2
+  format: HDTV
+  video_codec: h264
+  other: Proper
+  proper_count: 1
+  release_group: LOL
+  type: episode
+
+# FixWrongReleaseGroupDueToOther
+? - Show.Name.S01E01.Pilot.DVDSCR.x264.PREAiR-NoGRP
+  - Show.Name.S01E01.Pilot.DVDSCR.x264.PREAiR-NoGRP[rartv]
+  - Show.Name.S01E01.Pilot.DVDSCR.x264.PREAiR-NoGRP[ettv]
+  - Show.Name.S01E01.Pilot.DVDSCR.x264.PREAiR-NoGRP[something]
+: title: Show Name
+  season: 1
+  episode: 1
+  episode_title: Pilot
+  episode_details: Pilot
+  format: DVD
+  video_codec: h264
+  other: [Screener, Preair]
+  release_group: NoGRP
+  type: episode
+
+# FixWrongReleaseGroupDueToOther
+? Show.Name.S02E01.HDTV.x264.AAC.MP4-k3n.mp4
+: title: Show Name
+  season: 2
+  episode: 1
+  format: HDTV
+  video_codec: h264
+  audio_codec: AAC
+  container: [MP4, mp4] # not a big issue
+  release_group: k3n
+  mimetype: video/mp4
+  type: episode
+
+# FixWrongReleaseGroupDueToOther
+? Show.Name.S03.1080p.BluRay.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR
+: title: Show Name
+  season: 3
+  format: BluRay
+  audio_codec: DTS
+  audio_profile: HDMA
+  audio_channels: '5.1'
+  other: Remux
+  screen_size: 1080p
+  release_group: FraMeSToR
+  type: episode
+
+# FixWrongReleaseGroupDueToOther and PtM (that confuses guessit with Pt=Part and M = 1000)
+? Show.Name.S01-S03.COMPLETE.720p.BluRay.x264-PtM
+: title: Show Name
+  season: [1, 2, 3]
+  other: Complete
+  screen_size: 720p
+  format: BluRay
+  video_codec: h264
+  part: 1000 # not a big issue
+  release_group: PtM
+  type: episode
+
