@@ -32,8 +32,8 @@ import time
 import traceback
 
 from requests.compat import unquote_plus
-
-from tornado.web import RequestHandler  # pylint: disable=import-error
+from six import iteritems
+from tornado.web import RequestHandler
 
 import sickbeard
 from sickbeard import (
@@ -101,7 +101,7 @@ class ApiHandler(RequestHandler):
 
     def get(self, *args, **kwargs):
         kwargs = self.request.arguments
-        for arg, value in kwargs.iteritems():
+        for arg, value in iteritems(kwargs):
             if len(value) == 1:
                 kwargs[arg] = value[0]
 
@@ -650,7 +650,7 @@ class CMD_ComingEpisodes(ApiCall):
         grouped_coming_episodes = ComingEpisodes.get_coming_episodes(self.type, self.sort, True, self.paused)
         data = {section: [] for section in grouped_coming_episodes.keys()}
 
-        for section, coming_episodes in grouped_coming_episodes.iteritems():
+        for section, coming_episodes in iteritems(grouped_coming_episodes):
             for coming_episode in coming_episodes:
                 data[section].append({
                     'airdate': coming_episode['airdate'],
@@ -894,7 +894,7 @@ class CMD_EpisodeSetStatus(ApiCall):
 
         extra_msg = ""
         if start_backlog:
-            for season, segment in segments.iteritems():
+            for season, segment in iteritems(segments):
                 cur_backlog_queue_item = search_queue.BacklogQueueItem(show_obj, segment)
                 sickbeard.searchQueueScheduler.action.add_item(cur_backlog_queue_item)  # @UndefinedVariable
 

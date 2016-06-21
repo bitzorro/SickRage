@@ -22,25 +22,25 @@ import os
 import io
 import re
 
-try:
-    import xml.etree.cElementTree as etree
-except ImportError:
-    import xml.etree.ElementTree as etree
+from six import iterkeys
+import fanart
+from fanart.core import Request as fanartRequest
+from tmdb_api.tmdb_api import TMDB
 
 import sickbeard
-
 from sickbeard import helpers
 from sickbeard import logger
 from sickbeard.metadata import helpers as metadata_helpers
 from sickbeard.show_name_helpers import allPossibleShowNames
+
 from sickrage.helper.common import replace_extension
 from sickrage.helper.exceptions import ex
 from sickrage.helper.encoding import ek
 
-from tmdb_api.tmdb_api import TMDB
-
-import fanart
-from fanart.core import Request as fanartRequest
+try:
+    import xml.etree.cElementTree as etree
+except ImportError:
+    import xml.etree.ElementTree as etree
 
 
 class GenericMetadata(object):
@@ -321,7 +321,7 @@ class GenericMetadata(object):
     def create_season_posters(self, show_obj):
         if self.season_posters and show_obj:
             result = []
-            for season, _ in show_obj.episodes.iteritems():  # @UnusedVariable
+            for season in iterkeys(show_obj.episodes):
                 if not self._has_season_poster(show_obj, season):
                     logger.log(u"Metadata provider " + self.name + " creating season posters for " + show_obj.name,
                                logger.DEBUG)
@@ -333,7 +333,7 @@ class GenericMetadata(object):
         if self.season_banners and show_obj:
             result = []
             logger.log(u"Metadata provider " + self.name + " creating season banners for " + show_obj.name, logger.DEBUG)
-            for season, _ in show_obj.episodes.iteritems():  # @UnusedVariable
+            for season in iterkeys(show_obj.episodes):  # @UnusedVariable
                 if not self._has_season_banner(show_obj, season):
                     result = result + [self.save_season_banners(show_obj, season)]
             return all(result)
