@@ -66,7 +66,9 @@ class GuessitNameParser(object):
         'fr',
         'hu',
         'it',
+        'iw',
         'pt',
+        'ru',
         'sv',
     }
 

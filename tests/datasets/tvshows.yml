@@ -418,6 +418,7 @@
 : title: Show Name Online 2 The Show
   absolute_episode: 4
   subtitle_language: fr
+  release_group: FHD
   type: episode
 
 # anime_french_fansub
@@ -2008,7 +2009,7 @@
   video_codec: h264
   language: it
   audio_codec: AC3
-  format: HDTV
+  format: [DSRip, HDTV]
   release_group: DEUS TEAM
   type: episode
 
@@ -2266,7 +2267,52 @@
   release_group: DIMENSION
   type: episode
 
+# FixWrongReleaseGroupDueToOther (due to language)
+? Show.Name.S01E03.WEB-DL.x264.HUN-nIk
+: title: Show Name
+  season: 1
+  episode: 3
+  format: WEB-DL
+  video_codec: h264
+  language: hu
+  release_group: nIk
+  type: episode
+
+# FixWrongReleaseGroupDueToOther (due to subtitle_language)
+? Show.Name.S01.720p.HDTV.x264.2xRus.Eng.Subs-Hype
+: title: Show Name
+  season: 1
+  screen_size: 720p
+  format: HDTV
+  video_codec: h264
+  subtitle_language: en
+  release_group: Hype
+  type: episode
+
+# FixWrongReleaseGroupDueToOther (due to subtitle_language)
+? Show.Name.S01.DVD2.NLsubs-QoQ
+: title: Show Name
+  season: 1
+  format: DVD
+# nl sub language not detected. Not a big issue
+#  subtitle_language: nl 
+  release_group: QoQ
+  type: episode
+
+? Show.Name.S05E09.Some.Episode.Title.WS.DSR.x264-[NY2]
+: title: Show Name
+  season: 5
+  episode: 9
+  episode_title: Some Episode Title
+  other: WideScreen
+  format: DSRip
+  video_codec: h264
+  release_group: NY2
+  type: episode
+
 # Some cases to report in guessit
 # Show.Name.(s01e10).LEVEL.TEN.|.GAME.OVER.-.YouTube.Red.(720pHD).mp4-[Zeus]   # 720pHD
 # Show.Name.2014.S02E11.720p.HDTV.X264.RoSubbed-ThT  # RoSubbed
+# Show.Name.S05E09.Killer.Builds.WS.DSR.x264-[NY2]
+# Show.Name.2014.S02E11.720p.HDTV.X264.RoSubbed-ThT
 
