@@ -78,7 +78,7 @@ class FixAnimeReleaseGroup(Rule):
     """
     priority = POST_PROCESS
     consequence = [RemoveMatch, AppendMatch]
-    release_group_re = re.compile(r'^\[(?P<release_group>\w+)\]$', flags=re.IGNORECASE)
+    release_group_re = re.compile(r'^\[(?P<release_group>\w+(\-\w+)?)\]$', flags=re.IGNORECASE)
     blacklist = ('private', 'req')
 
     def when(self, matches, context):
@@ -95,7 +95,7 @@ class FixAnimeReleaseGroup(Rule):
         fileparts = matches.markers.named('path')
         for filepart in marker_sorted(fileparts, matches):
             # get the group (e.g.: [abc]) at the beginning of this filepart
-            group = matches.markers.at_match(filepart, index=0, predicate=lambda marker: marker.name == 'group')
+            group = matches.markers.at_index(filepart.start, index=0, predicate=lambda marker: marker.name == 'group')
 
             # if there's no group or there's already a match at this position, skip it...
             if not group or matches.at_match(group):
@@ -503,6 +503,7 @@ class FixWrongTitleDueToFilmTitle(Rule):
             if previous.name == 'title':
                 new_property.name = 'release_group'
                 new_property.tags = []
+                to_remove.extend(matches.named('release_group'))
 
             if previous.name != 'release_group':
                 release_groups = matches.range(filepart.start, filepart.end,
@@ -2024,14 +2025,12 @@ class FixWrongReleaseGroupDueToOther(Rule):
                     not matches.input_string[previous_match.end:last_hole.start].strip(seps) and \
                     not int_coercable(last_hole.value.strip(seps)):
 
-                if release_group:
-                    if release_group.start <= previous_match.start:
-                        continue
-
-                    to_remove.append(release_group)
+                if release_group and release_group.start <= previous_match.start:
+                    continue
 
                 last_hole.name = 'release_group'
                 to_append.append(last_hole)
+                to_remove.extend(matches.named('release_group'))
 
         return to_remove, to_append
 

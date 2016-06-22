@@ -55,8 +55,7 @@ class GuessitNameParser(object):
         r're:\bNEWPCT\b',
 
         # release groups taht starts with numbers
-        r're:\b4EVERHD\b',
-        r're:\bW4F\b',
+        r're:\b4EVERHD\b', # remove after guessit #313 is fixed
         r're:\bPtM\b',
     }
 
@@ -65,6 +64,7 @@ class GuessitNameParser(object):
         'en',
         'es',
         'fr',
+        'hu',
         'it',
         'pt',
         'sv',
