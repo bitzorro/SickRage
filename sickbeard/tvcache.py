@@ -217,7 +217,7 @@ class TVCache(object):
                 if cl:
                     cache_db_con.mass_action(cl)
 
-                # finished processing, let's save the newest x (index) items and store these in cache with a max of 5 
+                # finished processing, let's save the newest x (index) items and store these in cache with a max of 5
                 # (overwritable per provider, throug hthe max_recent_items attribute.
                 self.provider.recent_results = data['entries'][0:min(index, self.provider.max_recent_items)]
 
@@ -366,7 +366,7 @@ class TVCache(object):
         season = parse_result.season_number if parse_result.season_number is not None else 1
         episodes = parse_result.episode_numbers
 
-        if season is not None and episodes is not None:
+        if season is not None and not isinstance(season, list) and episodes is not None:
             # store episodes as a seperated string
             episodeText = '|{0}|'.format('|'.join({str(episode) for episode in episodes if episode}))
 
